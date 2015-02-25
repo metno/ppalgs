@@ -1,0 +1,6 @@
+/bin/
+/.settings/
+/.cproject
+/.project
+/ppalgsVersion.h
+/*.o
