@@ -1,0 +1,85 @@
+/**
+ NetCDFHandler
+
+ $Id: NetCDFHandler.h 1205 2014-12-11 16:03:33Z martinls $
+
+ Copyright (C) 2014 MET Norway
+
+ Contact information:
+ Norwegian Meteorological Institute
+ Box 43 Blindern
+ 0313 OSLO
+ NORWAY
+
+ This is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ You should have received a copy of the GNU General Public License
+ along with this software; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+#ifndef NETCDFHANDLER_
+#define NETCDFHANDLER_
+
+#include "FileHandler.h"
+
+#include <string>
+#include <memory>
+#include <vector>
+#include <netcdf>
+#include <set>
+#include <iterator>
+
+#include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+using namespace boost::gregorian;
+namespace pt = boost::posix_time;
+
+/**
+ * Class for handling netCDF-files, with both reading and writing capabilities,
+ * using netCDF API.
+ *
+ * NOTE: For some reason dataFile cannot be a pointer. This results in silent
+ * errors, in which data is simply not written to the open netCDF-file.
+ */
+class NetCDFHandler : public FileHandler {
+	public:
+	NetCDFHandler(std::string _filename, netCDF::NcFile::FileMode filemode=netCDF::NcFile::read);
+	virtual ~NetCDFHandler();
+
+	virtual std::string getFilename() { return filename; }
+
+	/**
+	 * Initialize the file with correct attributes
+	 */
+	virtual void init(pt::ptime referenceTime, const std::vector<pt::ptime> times);
+
+	/**
+	 * Fetch all available times (in epoch format)
+	 */
+	virtual std::shared_ptr<std::vector<double> > getTimes(std::string variableName);
+
+	/**
+	 * Fetch all available levels
+	 */
+	virtual std::shared_ptr<std::vector<double>  > getLevels(std::string variableName);
+
+	// PLACEHOLDERS
+	virtual std::shared_ptr<std::vector<std::string>  > getVariables() { return std::shared_ptr<std::vector<std::string> >(); };
+	virtual std::shared_ptr<std::vector<std::string> > getDimensions() { return std::shared_ptr<std::vector<std::string> >(); };
+	virtual int getNx(std::string variableName) { return -1; };
+	virtual int getNy(std::string variableName) { return -1; };
+	virtual pt::ptime getRefTime() { return pt::ptime(); };
+	virtual float readSingleValueLevel(std::string variableName, double _time, double _level) { return 0.0f; };
+	virtual boost::shared_array<float> readSpatialGriddedLevel(std::string variableName, double _time, double _level) { return boost::shared_array<float>(); };
+
+	private:
+	netCDF::NcFile::FileMode filemode;
+};
+
+#endif /*NETCDFHANDLER_*/

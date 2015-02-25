@@ -1,0 +1,11 @@
+Post Processing Algorithms -- ppalgs
+
+Description
+===========
+Performs ducting, icing index, and contrails post processing jobs.
+
+Requirements
+============
+You should use gcc version 4.6.3 or higher when compiling ppalgs, but older 
+versions may also work. Other compilers than gcc may also be used, but 
+only gcc has been thoroughly tested.

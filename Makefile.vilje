@@ -1,0 +1,135 @@
+# Makefile for ppalgs (was: ducting)
+
+LOCALDIR=/prod/forecast/opt
+IFORTLIB=/sw/sdev/intel/composerxe-2011.5.220/composerxe-2011.5.220/compiler/lib/intel64
+
+# Platform suffix
+PLT=
+
+# Compilers etc
+CXX=/usr/bin/g++
+CC=/usr/bin/gcc
+
+#LD=/use/bin/gcc
+#AR=ar
+#ARFLAGS=-cr
+
+# CXX-flags
+CXXFLAGS= -O3
+CXXLDFLAGS=
+#
+# C-flags
+CFLAGS= -O3
+CLDFLAGS=
+
+# log4cxx
+
+HASMILOGGER := $(shell test -f   $(LOCALDIR)/lib/libmiLogger.a && echo YES)
+
+ifeq ($(HASMILOGGER),YES)
+LOGGDEF=-DNOLOG4CXX
+LOGGLIBS=-L$(LOCALDIR)/lib -lmiLogger
+else
+#LOGGDEF=-DHAVE_LOG4CXX
+#LOGGINC=
+#LOGGLIBS=-L$(LOCALDIR)/lib -llog4cxx
+endif
+
+
+BINDIR=bin$(PLT)
+LIBDIR=lib$(PLT)
+INCDIR=.
+LOCALINC=$(LOCALDIR)/include
+
+VPATH = src
+
+INCLUDE= -I./include -I$(INCDIR) -I$(LOCALINC)
+
+LINKS=-L$(LOCALDIR)/lib \
+-ldiField -lpuTools \
+$(LOCALDIR)/lib/libmi_exp.a \
+-lm \
+-lproj \
+-lfimex \
+-lpuCtools -lmiLogger \
+-L$(IFORTLIB) -lifport -lifcore -limf -lsvml -lintlc
+#        -llog4cpp \
+#        -lboost_thread \
+#        -lboost_program_options
+# -lmi \
+
+OPTIONS=-fopenmp
+
+#----------------------------------------------------------------------------
+
+all: directories version $(BINDIR)/ppalgs
+
+#----------------------------------------------------------------------------
+
+CXXOBJ= Ducting.o Icing.o Contrails.o NetCDFHandler.o GribHandler.o ppalgs.o
+
+#----------------------------------------------------------------------------
+
+CXXSRC= Ducting.cpp Icing.cpp Contrails.cpp NetCDFHandler.cpp GribHandler.cpp ppalgs.cpp 
+
+ALLSRC= $(CXXSRC)
+ALLOBJ= $(CXXOBJ)
+
+#----------------------------------------------------------------------------
+
+# From .cpp to .o
+%.o: %.cpp
+	$(CXX) -std=c++0x $(CXXFLAGS) -c $< $(INCLUDE)
+
+# From .c to .o
+%.o: %.c
+	$(CC) -c $(CXXFLAGS) $< $(INCLUDE)
+
+#---------------------------------------------------------------------------
+
+directories:
+	if [ ! -d $(BINDIR) ] ; then mkdir $(BINDIR) ; fi
+
+#----------------------------------------------------------------------------
+
+$(BINDIR)/ppalgs: $(ALLOBJ) 
+	$(CXX) -std=c++0x -o $@ $(CXXFLAGS) $(OPTIONS) -g $(ALLOBJ) $(LINKS)
+
+#----------------------------------------------------------------------------
+
+VERSIONHEADER=ppalgsVersion.h
+version:
+	@if [ -s $(VERSIONHEADER) ]; then \
+	  olddate=`grep version_string $(VERSIONHEADER) | cut -f2 -d\"`; \
+	else \
+	  olddate="firsttime"; \
+	fi; \
+	today=`date +%Y-%m-%d`; \
+	if [ ! $$olddate = $$today ]; then \
+	  rm -f $(VERSIONHEADER); \
+	  echo '#ifndef _version_h_' > $(VERSIONHEADER); \
+	  echo '#define _version_h_' >> $(VERSIONHEADER); \
+	  echo 'const std::string version_string= "'$$today'";' >> $(VERSIONHEADER); \
+	  echo '#endif' >> $(VERSIONHEADER); \
+	  chmod 0664 $(VERSIONHEADER); \
+	  echo "UPDATED $(VERSIONHEADER) $$today"; \
+	else \
+	  echo "UNCHANGED $(VERSIONHEADER) $$olddate"; \
+	fi
+
+#----------------------------------------------------------------------------
+
+pretty:
+	find . \( -name '*~' \) -exec rm -f {} \;
+
+binclean:
+	rm -f $(BINDIR)/ppalgs
+
+clean:
+	@make -fMakefile.vilje pretty
+	rm -f *.o
+
+veryclean:
+	@make -fMakefile.vilje pretty
+	@make -fMakefile.vilje binclean
+	@make -fMakefile.vilje clean
