@@ -35,7 +35,9 @@
 using namespace MetNoFimex;
 using namespace std;
 
-GribHandler::GribHandler(string filename, string config_filename) {
+GribHandler::GribHandler(string _filename, string config_filename) {
+	filename = _filename;
+
 	reader = CDMFileReaderFactory::create("grib", filename, XMLInputFile(config_filename));
 	cdm = reader->getCDM();
 
@@ -236,11 +238,9 @@ boost::shared_array<float> GribHandler::readSpatialGriddedLevel(string variableN
 
 				// find time offset
 				boost::shared_array<double> times_data = times->asDouble();
-				for(int i=0; i < times->size(); ++i)
+				for(int i=0; i < times->size(); ++i, time_offset++)
 					if(times_data[i] == _time)
 						break;
-					else
-						++time_offset;
 
 				sb.setTimeStartAndSize(time_offset, 1);
 			}
@@ -251,11 +251,9 @@ boost::shared_array<float> GribHandler::readSpatialGriddedLevel(string variableN
 			// find level offset
 			DataPtr levels = zAxis->getData();
 			boost::shared_array<double> levels_data = levels->asDouble();
-			for(int i=0; i < levels->size(); ++i)
+			for(int i=0; i < levels->size(); ++i, level_offset++)
 				if (levels_data[i] == _level)
 					break;
-				else
-					++level_offset;
 
 			sb.setStartAndSize(zAxis, level_offset, 1);
 

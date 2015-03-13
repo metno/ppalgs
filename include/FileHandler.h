@@ -109,6 +109,19 @@ class FileHandler {
 	 */
 	virtual boost::shared_array<float> readSpatialGriddedLevel(std::string variableName, double _time, double _level) = 0;
 
+	/**
+	 * Write horizontal 2D level file
+	 * NOTE: Assumes one refTime!
+	 * @param variableName The variable to write to
+	 * @param _time The time to write
+	 * @param _level The level to write
+	 * @param size Size of data
+	 * @param data The data to write
+	 * @return True on success
+	 */
+	virtual bool writeSpatialGriddedLevel(std::string variableName, double _time, double _level,
+				size_t size, std::vector<float>& data) = 0;
+
 	protected:
 	FileType type;
 	std::string filename;

@@ -37,6 +37,10 @@
 #include <boost/shared_array.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "fimex/CDMReader.h"
+#include "fimex/coordSys/CoordinateSystem.h"
+#include "fimex/CDM.h"
+
 using namespace boost::gregorian;
 namespace pt = boost::posix_time;
 
@@ -69,6 +73,19 @@ class NetCDFHandler : public FileHandler {
 	 */
 	virtual std::shared_ptr<std::vector<double>  > getLevels(std::string variableName);
 
+	/**
+	 * Write horizontal 2D level to netCDF file
+	 * NOTE: Assumes one refTime!
+	 * @param variableName The variable to write to
+	 * @param _time The time to write
+	 * @param _level The level to write
+	 * @param size Size of data
+	 * @param data The data to write
+	 * @return True on success
+	 */
+	virtual bool writeSpatialGriddedLevel(std::string variableName, double _time, double _level,
+			size_t size, std::vector<float>& data);
+
 	// PLACEHOLDERS
 	virtual std::shared_ptr<std::vector<std::string>  > getVariables() { return std::shared_ptr<std::vector<std::string> >(); };
 	virtual std::shared_ptr<std::vector<std::string> > getDimensions() { return std::shared_ptr<std::vector<std::string> >(); };
@@ -79,7 +96,13 @@ class NetCDFHandler : public FileHandler {
 	virtual boost::shared_array<float> readSpatialGriddedLevel(std::string variableName, double _time, double _level) { return boost::shared_array<float>(); };
 
 	private:
+	inline bool isClose(double a, double b, double epsilon = 1e-5) { return std::fabs(a - b) < epsilon;	};
+
 	netCDF::NcFile::FileMode filemode;
+
+	boost::shared_ptr<MetNoFimex::CDMReader> reader;
+	MetNoFimex::CDM cdm;
+	std::vector<boost::shared_ptr<const MetNoFimex::CoordinateSystem> > coordSys;
 };
 
 #endif /*NETCDFHANDLER_*/

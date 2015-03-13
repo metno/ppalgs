@@ -28,10 +28,6 @@
 #include "Icing.h"
 #include "Contrails.h"
 
-///TODO: Get rid of diField dependency (use simple arrays/vectors and Fimex (through FileHandler) instead)
-#include <diField/diField.h>
-#include <diField/diFieldManager.h>
-
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <boost/date_time/gregorian_calendar.hpp>
@@ -61,7 +57,6 @@ void executeDucting(unique_ptr<FileHandler>& input,
 	pt::time_facet *facet = new pt::time_facet("%Y-%m-%dT%H:%M:%S");
 	cout.imbue(locale(cout.getloc(), facet));
 
-	std::unique_ptr<FieldManager> fieldManager(new FieldManager());
 	bool initializedOutputFile = false;
 	Ducting ducting;
 
@@ -137,49 +132,22 @@ void executeDucting(unique_ptr<FileHandler>& input,
 
 			ducting.calcDuctingGrads2D(nx, ny, ap, b, data.data(), ps.get(), t.get(), q.get());
 
-			// build fieldrequest for current time and level
-			FieldRequest fieldrequest;
-			fieldrequest.modelName = "AROME-MetCoOp";
-			fieldrequest.paramName = "ducting_ml";
-			stringstream tmp_time;
-			tmp_time.imbue(locale(cout.getloc(), facet));
-			tmp_time << ptimes[time_offset];
-			///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-			fieldrequest.ptime = miutil::miTime(tmp_time.str());
-			stringstream ref_time;
-			ref_time.imbue(locale(cout.getloc(), facet));
-			ref_time << refTime;
-			fieldrequest.refTime = ref_time.str();
-			fieldrequest.taxis = "time";
-			fieldrequest.zaxis = "hybrid0";
-			stringstream plevelSS;
-			plevelSS << level;
-			fieldrequest.plevel = plevelSS.str();
-
+			// write current time and level to file
 			if (!initializedOutputFile) {
 				output->init(refTime, ptimes);
 				initializedOutputFile = true;
 			}
-			std::vector<std::string> modelConfigInfo;
-			modelConfigInfo.push_back(
-					"model=" + fieldrequest.modelName
-							+ " t=fimex sourcetype=netcdf file="
-							+ output->getFilename() + " writeable=true");
-			fieldManager->addModels(modelConfigInfo);
 
-			Field* fieldW = 0;
-			fieldManager->makeField(fieldW, fieldrequest);
-			fieldW->nx = nx;
-			fieldW->ny = ny;
-			fieldW->data = data.data();
-			fieldManager->writeField(fieldrequest, fieldW);
-			//delete fieldW;
+			output->writeSpatialGriddedLevel("ducting_ml", time, level, size, data);
 
 			++level_offset;
+
+			break;
 		}
 
 		/// write minimum dMdz field
 		// build fieldrequest for current time and level
+		/*
 		{
 		FieldRequest fieldrequest;
 		fieldrequest.modelName = "AROME-MetCoOp";
@@ -212,43 +180,10 @@ void executeDucting(unique_ptr<FileHandler>& input,
 		fieldManager->writeField(fieldrequest, fieldW);
 		delete fieldW;
 		}
+		*/
 
 		/// write air_pressure_at_sea_level field
-		/*{
-		// build fieldrequest for current time and level
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "air_pressure_at_sea_level";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
-		fieldrequest.zaxis = "height0";
-		fieldrequest.plevel = "0";
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, ps.get(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
-		}*/
 
 		// Will enable if needed...
 		//    /// write heights of minimum dMdz field
@@ -272,6 +207,7 @@ void executeDucting(unique_ptr<FileHandler>& input,
  * 22 - cloud_liquid_water_content_of_atmosphere_layer - ga_76_253_251_109 (will be atmosphere_cloud_condensed_water_content_ml???)
  * 8 - ps (air_pressure_at_sea_level) - air_pressure_at_sea_level
  */
+/*
 void executeIcing(unique_ptr<FileHandler>&  input,
 		unique_ptr<FileHandler>& output,
 		const pt::ptime & startTime = pt::ptime(),
@@ -345,7 +281,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 
 			icing.calcIcingIndices2D(nx, ny, ap, b, data.data(), ps.get(), t.get(), cw.get(), w.get());
 
-			// build fieldrequest for current time and level
+			// write current time and level to file
 			FieldRequest fieldrequest;
 			fieldrequest.modelName = "AROME-MetCoOp";
 			fieldrequest.paramName = "icing_index_ml";
@@ -530,6 +466,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 		++time_offset;
 	}
 }
+*/
 
 /**
  * Compute contrails forecast.
@@ -539,6 +476,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
  * 9/q_spesifikk_fuktighet - specific_humidity - specific_humidity_ml
  * 8/p_lufttrykk - ps (air_pressure_at_sea_level) - air_pressure_at_sea_level
  */
+/*
 void executeContrails(unique_ptr<FileHandler>& input,
 		unique_ptr<FileHandler>& output,
 		const pt::ptime & startTime = pt::ptime(),
@@ -611,7 +549,7 @@ void executeContrails(unique_ptr<FileHandler>& input,
 
 			contrails.calcContrails2D(nx, ny, ap, b, data.data(), ps.get(), t.get(), q.get());
 
-			// build fieldrequest for current time and level
+			// write current time and level to file
 			FieldRequest fieldrequest;
 			fieldrequest.modelName = "AROME-MetCoOp";
 			fieldrequest.paramName = "contrails_ml";
@@ -761,6 +699,7 @@ void executeContrails(unique_ptr<FileHandler>& input,
 		++time_offset;
 	}
 }
+*/
 
 int main(int argc, char* argv[]) {
 	//FIXME: this should probably be a commandline option
@@ -882,9 +821,9 @@ int main(int argc, char* argv[]) {
 		executeDucting(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
 	}
 	if (vm.count("icing")) {
-		executeIcing(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
+	//	executeIcing(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
 	}
 	if (vm.count("contrails")) {
-		executeContrails(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
+	//	executeContrails(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
 	}
 }

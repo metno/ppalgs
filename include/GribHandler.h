@@ -45,11 +45,13 @@ namespace pt = boost::posix_time;
  */
 class GribHandler : public FileHandler {
 	public:
-	GribHandler(std::string filename, std::string config_filename);
+	GribHandler(std::string _filename, std::string config_filename);
 	virtual ~GribHandler();
 
 	//PLACEHOLDERS
 	virtual void init(pt::ptime referenceTime, const std::vector<pt::ptime> times) { };
+	virtual bool writeSpatialGriddedLevel(std::string variableName, double _time, double _level,
+					size_t size, std::vector<float>& data) { return false; };
 
 	/**
 	 * Fetch all variable names

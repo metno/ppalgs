@@ -24,13 +24,33 @@
 #include "NetCDFHandler.h"
 #include <sstream>
 
+#include "fimex/CoordinateSystemSliceBuilder.h"
+#include "fimex/CDMFileReaderFactory.h"
+#include "fimex/CDMVariable.h"
+#include "fimex/CDMReaderUtils.h"
+#include "fimex/XMLInput.h"
+#include "fimex/DataDecl.h"
+#include "fimex/Data.h"
+
+#include "fimex/CDMReaderWriter.h"
+#include "fimex/NetCDF_CDMReader.h"
+
 using namespace std;
+
 using namespace netCDF;
+using namespace MetNoFimex;
 
 NetCDFHandler::NetCDFHandler(string _filename, NcFile::FileMode filemode) :
 		filemode(filemode)
 {
 	filename = _filename;
+
+	reader = CDMFileReaderFactory::create("netcdf", filename);
+	cdm = reader->getCDM();
+
+	// get all coordinate systems from file, usually one, but may be a few (theoretical limit: # of variables)
+	coordSys = listCoordinateSystems(reader);
+
 	type = FileType::NETCDF;
 }
 
@@ -146,4 +166,76 @@ shared_ptr<vector<double> > NetCDFHandler::getLevels(string variableName) {
 	var.getVar(&levels->at(0));
 
 	return levels;
+}
+
+bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, double _time, double _level,
+		size_t size, vector<float>& data)
+{
+	// refresh
+	reader = CDMFileReaderFactory::create("netcdf", filename);
+	cdm = reader->getCDM();
+
+	// get all coordinate systems from file, usually one, but may be a few (theoretical limit: # of variables)
+	coordSys = listCoordinateSystems(reader);
+
+	int time_offset = 0;
+	int level_offset = 0;
+
+	// XXX: do some sanity checks (the variable must exist, the dimensions x,y,z, and time should exist, and there should be only one refTime)
+
+	// find an appropriate coordinate system for a variable
+	vector<boost::shared_ptr<const CoordinateSystem> >::iterator varSysIt =
+			find_if(coordSys.begin(), coordSys.end(), CompleteCoordinateSystemForComparator(variableName));
+
+	if (varSysIt != coordSys.end()) {
+		if ((*varSysIt)->isSimpleSpatialGridded()) {
+			CoordinateSystem::ConstAxisPtr xAxis = (*varSysIt)->getGeoXAxis(); // X or Lon
+			CoordinateSystem::ConstAxisPtr yAxis = (*varSysIt)->getGeoYAxis(); // Y or Lat
+			CoordinateSystem::ConstAxisPtr zAxis = (*varSysIt)->getGeoZAxis(); // Z or height (ml, pl, etc.)
+			CoordinateSystem::ConstAxisPtr tAxis = (*varSysIt)->getTimeAxis(); // time
+			CoordinateSystemSliceBuilder sb(cdm, *varSysIt);
+
+			// handling of time
+			if (tAxis.get() != 0) {
+				DataPtr times = reader->getDataSlice(tAxis->getName(),
+						sb.getTimeVariableSliceBuilder());
+
+				// find time offset
+				boost::shared_array<double> times_data = times->asDouble();
+				for(int i=0; i < times->size(); ++i, time_offset++)
+					if(times_data[i] == _time) {
+						break;
+					}
+
+			}
+
+			sb.setTimeStartAndSize(time_offset, 1);
+
+			// further selection of data
+			sb.setAll(xAxis);
+			sb.setAll(yAxis);
+
+			// find level offset
+			DataPtr levels = reader->getData(zAxis->getName());
+			boost::shared_array<double> levels_data = levels->asDouble();
+			for(int i=0; i < levels->size(); ++i, level_offset++)
+				if (isClose(levels_data[i], _level)) {
+					break;
+				}
+
+			sb.setStartAndSize(zAxis, level_offset, 1);
+
+			// write the data
+			//boost::shared_ptr<CDMReaderWriter> writer = boost::dynamic_pointer_cast<CDMReaderWriter>(reader);
+			boost::shared_ptr<CDMReaderWriter> writer = boost::shared_ptr<CDMReaderWriter>(new NetCDF_CDMReader(filename, true));
+
+			DataPtr write_data = createData(CDMDataType::CDM_FLOAT, data.begin(), data.end());
+			writer->putDataSlice(variableName, sb, write_data);
+			writer->sync();
+
+			return true;
+		}
+	}
+
+	return false;
 }
