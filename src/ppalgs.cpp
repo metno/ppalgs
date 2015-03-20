@@ -40,6 +40,25 @@ namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
 /**
+ * Copy a spatial gridded field from one file to another.
+ * @param input FileHandler for input file
+ * @param output FileHandler for output file
+ * @param variableName Name of field to copy
+ * @param size Size (nx*ny) of field to copy
+ * @param time Time step
+ * @param level Level (defaults to -1; used for single-level variables)
+ */
+void copySpatialGriddedLevel(unique_ptr<FileHandler>& input,
+		unique_ptr<FileHandler>& output, string variableName, int size,
+		double time, double level=-1)
+{
+	boost::shared_array<float> tmp_data = input->readSpatialGriddedLevel(variableName, time, level);
+	vector<float> data (tmp_data.get(), tmp_data.get() + size);
+
+	output->writeSpatialGriddedLevel(variableName, size, data, time, level);
+}
+
+/**
  * Compute ducting gradients.
  *
  * Variables used:
@@ -143,7 +162,6 @@ void executeDucting(unique_ptr<FileHandler>& input,
 			++level_offset;
 		}
 
-		/// write minimum dMdz field
 		{
 		float* dMdzMinField = ducting.getdMdzMinField();
 		vector<float> data(&dMdzMinField[0], &dMdzMinField[size]);
@@ -151,20 +169,15 @@ void executeDucting(unique_ptr<FileHandler>& input,
 		output->writeSpatialGriddedLevel("ducting_sum", size, data, time);
 		}
 
-		/// write surface_air_pressure field
-		{
-		boost::shared_array<float> tmp_data = input->readSpatialGriddedLevel("surface_air_pressure", time);
-		vector<float> data (tmp_data.get(), tmp_data.get() + size);
+		copySpatialGriddedLevel(input, output, "surface_air_pressure", size, time);
 
-		output->writeSpatialGriddedLevel("surface_air_pressure", size, data, time);
-		}
+		// Will enable if needed... NOT IN FIMEX CONFIGURATION ! ! ! MUST BE ADDED ! ! !
+		/*{
+		float* dMdzMinHeightField = ducting.getdMdzMinHeightField();
+		vector<float> data(&dMdzMinHeightField[0], &dMdzMinHeightField[size]);
 
-		// Will enable if needed...
-		//    /// write heights of minimum dMdz field
-		//    dMdzMinHeightField.shallowMemberCopy(*psField); ///< use metadata from psField
-		//    dMdzMinHeightField.data = ducting.getdMdzMinHeightField();
-		//
-		//    output.writeFieldMetnoFormat(&dMdzMinHeightField, outputfilename, funit, 125);
+		output->writeSpatialGriddedLevel("ducting_height", size, data, time);
+		}*/
 
 		ducting.reset();
 		++time_offset;
@@ -181,7 +194,6 @@ void executeDucting(unique_ptr<FileHandler>& input,
  * 22 - cloud_liquid_water_content_of_atmosphere_layer - ga_76_253_251_109 (will be atmosphere_cloud_condensed_water_content_ml???)
  * 8 - ps (air_pressure_at_sea_level) - air_pressure_at_sea_level
  */
-/*
 void executeIcing(unique_ptr<FileHandler>&  input,
 		unique_ptr<FileHandler>& output,
 		const pt::ptime & startTime = pt::ptime(),
@@ -192,7 +204,6 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 	pt::time_facet *facet = new pt::time_facet("%Y-%m-%dT%H:%M:%S");
 	cout.imbue(locale(cout.getloc(), facet));
 
-	std::unique_ptr<FieldManager> fieldManager(new FieldManager());
 	bool initializedOutputFile = false;
 	Icing icing;
 
@@ -256,191 +267,50 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 			icing.calcIcingIndices2D(nx, ny, ap, b, data.data(), ps.get(), t.get(), cw.get(), w.get());
 
 			// write current time and level to file
-			FieldRequest fieldrequest;
-			fieldrequest.modelName = "AROME-MetCoOp";
-			fieldrequest.paramName = "icing_index_ml";
-			stringstream tmp_time;
-			tmp_time.imbue(locale(cout.getloc(), facet));
-			tmp_time << ptimes[time_offset];
-			///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-			fieldrequest.ptime = miutil::miTime(tmp_time.str());
-			stringstream ref_time;
-			ref_time.imbue(locale(cout.getloc(), facet));
-			ref_time << refTime;
-			fieldrequest.refTime = ref_time.str();
-			fieldrequest.taxis = "time";
-			fieldrequest.zaxis = "hybrid0";
-			stringstream plevelSS;
-			plevelSS << level;
-			fieldrequest.plevel = plevelSS.str();
-
 			if (!initializedOutputFile) {
 				output->init(refTime, ptimes);
 				initializedOutputFile = true;
 			}
-			std::vector<std::string> modelConfigInfo;
-			modelConfigInfo.push_back(
-					"model=" + fieldrequest.modelName
-							+ " t=fimex sourcetype=netcdf file="
-							+ output->getFilename() + " writeable=true");
-			fieldManager->addModels(modelConfigInfo);
 
-			Field* fieldW = 0;
-			fieldManager->makeField(fieldW, fieldrequest);
-			fieldW->nx = nx;
-			fieldW->ny = ny;
-			fieldW->data = data.data();
-			fieldManager->writeField(fieldrequest, fieldW);
-			//delete fieldW;
+			output->writeSpatialGriddedLevel("icing_index_ml", size, data, time, level);
 
 			++level_offset;
 		}
 
-		/// write icing_sum field
 		{
-		// build fieldrequest for current time and level
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "icing_sum";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
+		float* icingindexMaxField = icing.getIcingindexMaxField();
+		vector<float> data(&icingindexMaxField[0], &icingindexMaxField[size]);
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, icing.getIcingindexMaxField(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
+		output->writeSpatialGriddedLevel("icing_sum", size, data, time);
 		}
 
-		/// write icing_height field
 		{
-		// build fieldrequest for current time and level
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "icing_height";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
+		float* icingindexMaxHeightField = icing.getIcingindexMaxHeightField();
+		vector<float> data(&icingindexMaxHeightField[0], &icingindexMaxHeightField[size]);
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, icing.getIcingindexMaxHeightField(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
+		output->writeSpatialGriddedLevel("icing_height", size, data, time);
 		}
 
-		/// write icing_height_bottom field
-		// build fieldrequest for current time and level
 		{
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "icing_height_bottom";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
+		float* icingindexBottomGt4Field = icing.getIcingindexBottomGt4Field();
+		vector<float> data(&icingindexBottomGt4Field[0], &icingindexBottomGt4Field[size]);
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, icing.getIcingindexBottomGt4Field(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
+		output->writeSpatialGriddedLevel("icing_height_bottom", size, data, time);
 		}
 
-		/// write icing_height_top field
 		{
-		// build fieldrequest for current time and level
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "icing_height_top";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
+		float* icingindexTopGt4Field = icing.getIcingindexTopGt4Field();
+		vector<float> data(&icingindexTopGt4Field[0], &icingindexTopGt4Field[size]);
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, icing.getIcingindexTopGt4Field(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
+		output->writeSpatialGriddedLevel("icing_height_top", size, data, time);
 		}
+
+		copySpatialGriddedLevel(input, output, "surface_air_pressure", size, time);
 
 		icing.reset();
 		++time_offset;
 	}
 }
-*/
 
 /**
  * Compute contrails forecast.
@@ -450,7 +320,6 @@ void executeIcing(unique_ptr<FileHandler>&  input,
  * 9/q_spesifikk_fuktighet - specific_humidity - specific_humidity_ml
  * 8/p_lufttrykk - ps (air_pressure_at_sea_level) - air_pressure_at_sea_level
  */
-/*
 void executeContrails(unique_ptr<FileHandler>& input,
 		unique_ptr<FileHandler>& output,
 		const pt::ptime & startTime = pt::ptime(),
@@ -461,7 +330,6 @@ void executeContrails(unique_ptr<FileHandler>& input,
 	pt::time_facet *facet = new pt::time_facet("%Y-%m-%dT%H:%M:%S");
 	cout.imbue(locale(cout.getloc(), facet));
 
-	std::unique_ptr<FieldManager> fieldManager(new FieldManager());
 	bool initializedOutputFile = false;
 	Contrails contrails;
 
@@ -524,156 +392,43 @@ void executeContrails(unique_ptr<FileHandler>& input,
 			contrails.calcContrails2D(nx, ny, ap, b, data.data(), ps.get(), t.get(), q.get());
 
 			// write current time and level to file
-			FieldRequest fieldrequest;
-			fieldrequest.modelName = "AROME-MetCoOp";
-			fieldrequest.paramName = "contrails_ml";
-			stringstream tmp_time;
-			tmp_time.imbue(locale(cout.getloc(), facet));
-			tmp_time << ptimes[time_offset];
-			///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-			fieldrequest.ptime = miutil::miTime(tmp_time.str());
-			stringstream ref_time;
-			ref_time.imbue(locale(cout.getloc(), facet));
-			ref_time << refTime;
-			fieldrequest.refTime = ref_time.str();
-			fieldrequest.taxis = "time";
-			fieldrequest.zaxis = "hybrid0";
-			stringstream plevelSS;
-			plevelSS << level;
-			fieldrequest.plevel = plevelSS.str();
-
 			if (!initializedOutputFile) {
 				output->init(refTime, ptimes);
 				initializedOutputFile = true;
 			}
-			std::vector<std::string> modelConfigInfo;
-			modelConfigInfo.push_back(
-					"model=" + fieldrequest.modelName
-							+ " t=fimex sourcetype=netcdf file="
-							+ output->getFilename() + " writeable=true");
-			fieldManager->addModels(modelConfigInfo);
 
-			Field* fieldW = 0;
-			fieldManager->makeField(fieldW, fieldrequest);
-			fieldW->nx = nx;
-			fieldW->ny = ny;
-			fieldW->data = data.data();
-			fieldManager->writeField(fieldrequest, fieldW);
-			//delete fieldW;
+			output->writeSpatialGriddedLevel("contrails_ml", size, data, time, level);
 
 			++level_offset;
 		}
 
-		/// write contrails_sum field
 		{
-		// build fieldrequest for current time and level
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "contrails_sum";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
+		float* sumField = contrails.getSumField();
+		vector<float> data(&sumField[0], &sumField[size]);
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, contrails.getSumField(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
+		output->writeSpatialGriddedLevel("contrails_sum", size, data, time);
 		}
 
-		/// write contrails_bottom field
-		// build fieldrequest for current time and level
 		{
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "contrails_bottom";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
+		float* contrailsBottomField = contrails.getContrailsBottomField();
+		vector<float> data(&contrailsBottomField[0], &contrailsBottomField[size]);
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, contrails.getContrailsBottomField(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
+		output->writeSpatialGriddedLevel("contrails_bottom", size, data, time);
 		}
 
-		/// write contrails_top field
 		{
-		// build fieldrequest for current time and level
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "contrails_top";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
+		float* contrailsTopField = contrails.getContrailsTopField();
+		vector<float> data(&contrailsTopField[0], &contrailsTopField[size]);
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, contrails.getContrailsTopField(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
+		output->writeSpatialGriddedLevel("contrails_top", size, data, time);
 		}
+
+		copySpatialGriddedLevel(input, output, "surface_air_pressure", size, time);
 
 		contrails.reset();
 		++time_offset;
 	}
 }
-*/
 
 int main(int argc, char* argv[]) {
 	//FIXME: this should probably be a commandline option
@@ -795,9 +550,9 @@ int main(int argc, char* argv[]) {
 		executeDucting(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
 	}
 	if (vm.count("icing")) {
-	//	executeIcing(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
+		executeIcing(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
 	}
 	if (vm.count("contrails")) {
-	//	executeContrails(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
+		executeContrails(inputHandler, outputHandler, startTime, stopTime, startLevel, stopLevel);
 	}
 }
