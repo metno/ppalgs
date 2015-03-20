@@ -249,13 +249,15 @@ boost::shared_array<float> GribHandler::readSpatialGriddedLevel(string variableN
 			sb.setAll(yAxis);
 
 			// find level offset
-			DataPtr levels = zAxis->getData();
-			boost::shared_array<double> levels_data = levels->asDouble();
-			for(int i=0; i < levels->size(); ++i, level_offset++)
-				if (levels_data[i] == _level)
-					break;
+			if(_level != -1) {
+				DataPtr levels = zAxis->getData();
+				boost::shared_array<double> levels_data = levels->asDouble();
+				for(int i=0; i < levels->size(); ++i, level_offset++)
+					if (levels_data[i] == _level)
+						break;
 
-			sb.setStartAndSize(zAxis, level_offset, 1);
+				sb.setStartAndSize(zAxis, level_offset, 1);
+			}
 
 			// fetch the data
 			data = reader->getDataSlice(variableName, sb);

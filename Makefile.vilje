@@ -46,12 +46,11 @@ VPATH = src
 INCLUDE= -I./include -I$(INCDIR) -I$(LOCALINC)
 
 LINKS=-L$(LOCALDIR)/lib \
--ldiField -lpuTools \
 $(LOCALDIR)/lib/libmi_exp.a \
 -lm \
 -lproj \
 -lfimex \
--lpuCtools -lmiLogger \
+-lmiLogger \
 -L$(IFORTLIB) -lifport -lifcore -limf -lsvml -lintlc
 #        -llog4cpp \
 #        -lboost_thread \

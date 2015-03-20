@@ -56,7 +56,7 @@ VPATH = src
 INCLUDE= -I./include -I$(INCDIR) -I$(LOCALINC) $(NETCDFINCLUDE) $(UDUNITSINCLUDE)
 
 LINKS = -L$(LOCALDIR)/$(LIBDIR) \
-        -ldiField -lpuTools -lpuCtools -lpuDatatypes -lmiLogger \
+        -lmiLogger \
         -L$(LOCALDIR)/$(LIBDIR) -lmi \
         $(F2CLIB) -lm \
         $(UDUNITSLIBDIR) $(UDUNITSLIB) \

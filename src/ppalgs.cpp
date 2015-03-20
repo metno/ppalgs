@@ -138,52 +138,26 @@ void executeDucting(unique_ptr<FileHandler>& input,
 				initializedOutputFile = true;
 			}
 
-			output->writeSpatialGriddedLevel("ducting_ml", time, level, size, data);
+			output->writeSpatialGriddedLevel("ducting_ml", size, data, time, level);
 
 			++level_offset;
-
-			break;
 		}
 
 		/// write minimum dMdz field
-		// build fieldrequest for current time and level
-		/*
 		{
-		FieldRequest fieldrequest;
-		fieldrequest.modelName = "AROME-MetCoOp";
-		fieldrequest.paramName = "ducting_sum";
-		stringstream tmp_time;
-		tmp_time.imbue(locale(cout.getloc(), facet));
-		tmp_time << ptimes[time_offset];
-		///FIXME: Remove miTime badness (e.g., by using fimex instead of diField(FieldManager))
-		fieldrequest.ptime = miutil::miTime(tmp_time.str());
-		stringstream ref_time;
-		ref_time.imbue(locale(cout.getloc(), facet));
-		ref_time << refTime;
-		fieldrequest.refTime = ref_time.str();
-		fieldrequest.taxis = "time";
+		float* dMdzMinField = ducting.getdMdzMinField();
+		vector<float> data(&dMdzMinField[0], &dMdzMinField[size]);
 
-		std::vector<std::string> modelConfigInfo;
-		modelConfigInfo.push_back(
-				"model=" + fieldrequest.modelName
-						+ " t=fimex sourcetype=netcdf file=" + output->getFilename()
-						+ " writeable=true");
-		fieldManager->addModels(modelConfigInfo);
-
-		Field* fieldW = 0;
-		fieldManager->makeField(fieldW, fieldrequest);
-		fieldW->nx = nx;
-		fieldW->ny = ny;
-		float *data = new float[size]; ///< no memleak! deleted by Field::cleanup()
-		memcpy(data, ducting.getdMdzMinField(), size * sizeof(float));
-		fieldW->data = data;
-		fieldManager->writeField(fieldrequest, fieldW);
-		delete fieldW;
+		output->writeSpatialGriddedLevel("ducting_sum", size, data, time);
 		}
-		*/
 
-		/// write air_pressure_at_sea_level field
+		/// write surface_air_pressure field
+		{
+		boost::shared_array<float> tmp_data = input->readSpatialGriddedLevel("surface_air_pressure", time);
+		vector<float> data (tmp_data.get(), tmp_data.get() + size);
 
+		output->writeSpatialGriddedLevel("surface_air_pressure", size, data, time);
+		}
 
 		// Will enable if needed...
 		//    /// write heights of minimum dMdz field

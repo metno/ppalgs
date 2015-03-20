@@ -168,8 +168,8 @@ shared_ptr<vector<double> > NetCDFHandler::getLevels(string variableName) {
 	return levels;
 }
 
-bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, double _time, double _level,
-		size_t size, vector<float>& data)
+bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, size_t size, vector<float>& data,
+		double _time, double _level)
 {
 	// refresh
 	reader = CDMFileReaderFactory::create("netcdf", filename);
@@ -216,16 +216,18 @@ bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, double _time, 
 			sb.setAll(yAxis);
 
 			// find level offset
-			DataPtr levels = reader->getData(zAxis->getName());
-			boost::shared_array<double> levels_data = levels->asDouble();
-			for(int i=0; i < levels->size(); ++i, level_offset++)
-				if (isClose(levels_data[i], _level)) {
-					break;
-				}
-
-			sb.setStartAndSize(zAxis, level_offset, 1);
+			if (_level != -1) {
+				DataPtr levels = reader->getData(zAxis->getName());
+				boost::shared_array<double> levels_data = levels->asDouble();
+				for(int i=0; i < levels->size(); ++i, level_offset++)
+					if (isClose(levels_data[i], _level)) {
+						break;
+					}
+				sb.setStartAndSize(zAxis, level_offset, 1);
+			}
 
 			// write the data
+			// FIXME: The first line below should work... but we get complaints about write protected nc-file
 			//boost::shared_ptr<CDMReaderWriter> writer = boost::dynamic_pointer_cast<CDMReaderWriter>(reader);
 			boost::shared_ptr<CDMReaderWriter> writer = boost::shared_ptr<CDMReaderWriter>(new NetCDF_CDMReader(filename, true));
 

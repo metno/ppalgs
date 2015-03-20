@@ -50,8 +50,8 @@ class GribHandler : public FileHandler {
 
 	//PLACEHOLDERS
 	virtual void init(pt::ptime referenceTime, const std::vector<pt::ptime> times) { };
-	virtual bool writeSpatialGriddedLevel(std::string variableName, double _time, double _level,
-					size_t size, std::vector<float>& data) { return false; };
+	virtual bool writeSpatialGriddedLevel(std::string variableName, size_t size, std::vector<float>& data,
+					double _time, double _level=-1) { return false; };
 
 	/**
 	 * Fetch all variable names
@@ -106,7 +106,7 @@ class GribHandler : public FileHandler {
 	 * @param level The level to read
 	 * @return level from variableName as a 2D field
 	 */
-	virtual boost::shared_array<float> readSpatialGriddedLevel(std::string variableName, double _time, double _level);
+	virtual boost::shared_array<float> readSpatialGriddedLevel(std::string variableName, double _time, double _level=-1);
 
 	private:
 	boost::shared_ptr<MetNoFimex::CDMReader> reader;

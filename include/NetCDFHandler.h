@@ -77,14 +77,14 @@ class NetCDFHandler : public FileHandler {
 	 * Write horizontal 2D level to netCDF file
 	 * NOTE: Assumes one refTime!
 	 * @param variableName The variable to write to
-	 * @param _time The time to write
-	 * @param _level The level to write
 	 * @param size Size of data
 	 * @param data The data to write
+	 * @param _time The time to write
+	 * @param _level The level to write
 	 * @return True on success
 	 */
-	virtual bool writeSpatialGriddedLevel(std::string variableName, double _time, double _level,
-			size_t size, std::vector<float>& data);
+	virtual bool writeSpatialGriddedLevel(std::string variableName, size_t size, std::vector<float>& data,
+			double _time, double _level=-1);
 
 	// PLACEHOLDERS
 	virtual std::shared_ptr<std::vector<std::string>  > getVariables() { return std::shared_ptr<std::vector<std::string> >(); };
@@ -93,7 +93,7 @@ class NetCDFHandler : public FileHandler {
 	virtual int getNy(std::string variableName) { return -1; };
 	virtual pt::ptime getRefTime() { return pt::ptime(); };
 	virtual float readSingleValueLevel(std::string variableName, double _time, double _level) { return 0.0f; };
-	virtual boost::shared_array<float> readSpatialGriddedLevel(std::string variableName, double _time, double _level) { return boost::shared_array<float>(); };
+	virtual boost::shared_array<float> readSpatialGriddedLevel(std::string variableName, double _time, double _level=-1) { return boost::shared_array<float>(); };
 
 	private:
 	inline bool isClose(double a, double b, double epsilon = 1e-5) { return std::fabs(a - b) < epsilon;	};

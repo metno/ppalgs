@@ -95,7 +95,7 @@ void Ducting::initialize(int nx, int ny)
   for (int i = 0; i < elements; ++i) {
     zm[i] = 0.;
     Mm[i] = 0.;
-    dMdzMin[i] = 0.;
+    dMdzMin[i] = numeric_limits<float>::max();
     dMdzMinHeight[i] = 0.;
   }
 }
