@@ -72,12 +72,11 @@ Icing::Icing()
 
 Icing::~Icing()
 {
-  /// XXX: Cause "doble free" segfault, should investigate why. Maybe diField free's this memory.
-  /*delete[] sum;
+  delete[] sum;
   delete[] icingindexMax;
   delete[] icingindexMaxHeight;
   delete[] icingindexBottomGt4;
-  delete[] icingindexTopGt4;*/
+  delete[] icingindexTopGt4;
 }
 
 bool Icing::initialized()

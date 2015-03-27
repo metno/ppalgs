@@ -45,11 +45,22 @@ private:
 	float rcp;
 	float eps;
 	
-	/// last z (z minus) and M values, and minimum dMdz values
+	/// last z (z minus) and M values
 	float* zm;
 	float* Mm;
+
+	// 1.0 (true) indicates that we are inside a duct for this vertical column
+	float* inDuct;
+	float* currentElevatedDuctBottom;
+	float* currentElevatedDuctTop;
+
+	/// single-level parameters
 	float* dMdzMin;
-	float* dMdzMinHeight;
+	float* surfaceDuctBottom;
+	float* surfaceDuctTop;
+	float* elevatedDuctBottom;
+	float* elevatedDuctTop;
+	float* noOfElevatedDucts;
 	
 	/**
 	 * Set domain size.
@@ -142,11 +153,52 @@ public:
 	 * Get the minimum dMdz field.
 	 */
 	float* getdMdzMinField();
-	/**
-	 * Get the height information of the minimum dMdz field.
-	 */
-	float* getdMdzMinHeightField();
 	
+	/**
+	 * Lowest height of surface duct (below 1000 ft)
+	 *
+	 * NOTE:
+	 * - dM/dz > 0 indicates a duct
+	 * - if multiple ducts are present, the thickest is chosen
+	 * - if multiple ducts have the same thickness, the lowest is chosen
+	 */
+	float* getSurfaceDuctBottom();
+
+	/**
+	 * Highest height of surface duct (below 1000 ft)
+	 *
+	 * NOTE:
+	 * - dM/dz > 0 indicates a duct
+	 * - if multiple ducts are present, the thickest is chosen
+	 * - if multiple ducts have the same thickness, the lowest is chosen
+	 */
+	float* getSurfaceDuctTop();
+
+	/**
+	 * Lowest height of elevated duct (1000 ft or higher)
+	 *
+	 * NOTE:
+	 * - dM/dz > 0 indicates a duct
+	 * - if multiple ducts are present, the thickest is chosen
+	 * - if multiple ducts have the same thickness, the lowest is chosen
+	 */
+	float* getElevatedDuctBottom();
+
+	/**
+	 * Highest height of elevated duct (1000 ft or higher)
+	 *
+	 * NOTE:
+	 * - dM/dz > 0 indicates a duct
+	 * - if multiple ducts are present, the thickest is chosen
+	 * - if multiple ducts have the same thickness, the lowest is chosen
+	 */
+	float* getElevatedDuctTop();
+
+	/**
+	 * Total number of elevated ducts (in the vertical dimension)
+	 */
+	float* getNoOfElevatedDucts();
+
 	/**
 	 * Reset all max/min fields.
 	 */

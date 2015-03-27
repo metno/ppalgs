@@ -86,7 +86,11 @@ Contrails::Contrails()
 }
 
 Contrails::~Contrails()
-{ }
+{
+	delete [] sum;
+	delete [] contrailsBottom;
+	delete [] contrailsTop;
+}
 
 bool Contrails::initialized()
 {

@@ -169,15 +169,43 @@ void executeDucting(unique_ptr<FileHandler>& input,
 		output->writeSpatialGriddedLevel("ducting_sum", size, data, time);
 		}
 
+		{
+		float* surfaceDuctBottom = ducting.getSurfaceDuctBottom();
+		vector<float> data(&surfaceDuctBottom[0], &surfaceDuctBottom[size]);
+
+		output->writeSpatialGriddedLevel("ducting_surface_bottom", size, data, time);
+		}
+
+		{
+		float* surfaceDuctTop = ducting.getSurfaceDuctTop();
+		vector<float> data(&surfaceDuctTop[0], &surfaceDuctTop[size]);
+
+		output->writeSpatialGriddedLevel("ducting_surface_top", size, data, time);
+		}
+
+		{
+		float* elevatedDuctBottom = ducting.getElevatedDuctBottom();
+		vector<float> data(&elevatedDuctBottom[0], &elevatedDuctBottom[size]);
+
+		output->writeSpatialGriddedLevel("ducting_elevated_bottom", size, data, time);
+		}
+
+		{
+		float* elevatedDuctTop = ducting.getElevatedDuctTop();
+		vector<float> data(&elevatedDuctTop[0], &elevatedDuctTop[size]);
+
+		output->writeSpatialGriddedLevel("ducting_elevated_top", size, data, time);
+		}
+
+		{
+		float* noOfElevatedDucts = ducting.getNoOfElevatedDucts();
+		vector<float> data(&noOfElevatedDucts[0], &noOfElevatedDucts[size]);
+
+		output->writeSpatialGriddedLevel("ducting_no_of_elevated_ducts", size, data, time);
+		}
+
 		copySpatialGriddedLevel(input, output, "surface_air_pressure", size, time);
 
-		// Will enable if needed... NOT IN FIMEX CONFIGURATION ! ! ! MUST BE ADDED ! ! !
-		/*{
-		float* dMdzMinHeightField = ducting.getdMdzMinHeightField();
-		vector<float> data(&dMdzMinHeightField[0], &dMdzMinHeightField[size]);
-
-		output->writeSpatialGriddedLevel("ducting_height", size, data, time);
-		}*/
 
 		ducting.reset();
 		++time_offset;

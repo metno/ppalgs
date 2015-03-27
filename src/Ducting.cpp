@@ -27,6 +27,7 @@
 #include "GribHandler.h"
 
 #define ONE_FEET 3.2808399
+#define THOUSAND_FEET_IN_METERS 304.8
 //#define NDEBUG
 
 #include <assert.h>
@@ -70,9 +71,18 @@ Ducting::Ducting()
 
 Ducting::~Ducting()
 {
-  /// XXX: Cause "doble free" segfault, should investigate why. Maybe diField free's this memory.
-  /*delete [] zm;
-  delete [] Mm;*/
+  delete [] zm;
+  delete [] Mm;
+  delete [] inDuct;
+  delete [] currentElevatedDuctBottom;
+  delete [] currentElevatedDuctTop;
+
+  delete [] dMdzMin;
+  delete [] surfaceDuctBottom;
+  delete [] surfaceDuctTop;
+  delete [] elevatedDuctBottom;
+  delete [] elevatedDuctTop;
+  delete [] noOfElevatedDucts;
 }
 
 bool Ducting::initialized()
@@ -89,14 +99,28 @@ void Ducting::initialize(int nx, int ny)
 
   zm = new float[elements];
   Mm = new float[elements];
+  inDuct = new float[elements];
+  currentElevatedDuctBottom = new float[elements];
+  currentElevatedDuctTop = new float[elements];
   dMdzMin = new float[elements];
-  dMdzMinHeight = new float[elements];
+  surfaceDuctBottom = new float[elements];
+  surfaceDuctTop = new float[elements];
+  elevatedDuctBottom = new float[elements];
+  elevatedDuctTop = new float[elements];
+  noOfElevatedDucts = new float[elements];
 
   for (int i = 0; i < elements; ++i) {
     zm[i] = 0.;
     Mm[i] = 0.;
+    inDuct[i] = 0.;
+    currentElevatedDuctBottom[i] = numeric_limits<float>::max();
+    currentElevatedDuctTop[i] = -numeric_limits<float>::max();
     dMdzMin[i] = numeric_limits<float>::max();
-    dMdzMinHeight[i] = 0.;
+    surfaceDuctBottom[i] = numeric_limits<float>::max();
+    surfaceDuctTop[i] = -numeric_limits<float>::max();
+    elevatedDuctBottom[i] = numeric_limits<float>::max();
+    elevatedDuctTop[i] = -numeric_limits<float>::max();
+    noOfElevatedDucts[i] = 0.0f;
   }
 }
 
@@ -105,9 +129,29 @@ float* Ducting::getdMdzMinField()
   return dMdzMin;
 }
 
-float* Ducting::getdMdzMinHeightField()
+float* Ducting::getSurfaceDuctBottom()
 {
-  return dMdzMinHeight;
+  return surfaceDuctBottom;
+}
+
+float* Ducting::getSurfaceDuctTop()
+{
+  return surfaceDuctTop;
+}
+
+float* Ducting::getElevatedDuctBottom()
+{
+  return elevatedDuctBottom;
+}
+
+float* Ducting::getElevatedDuctTop()
+{
+  return elevatedDuctTop;
+}
+
+float* Ducting::getNoOfElevatedDucts()
+{
+  return noOfElevatedDucts;
 }
 
 void Ducting::reset()
@@ -117,8 +161,15 @@ void Ducting::reset()
   for (int i = 0; i < elements; ++i) {
     zm[i] = 0.;
     Mm[i] = 0.;
+    inDuct[i] = 0.;
+    currentElevatedDuctBottom[i] = numeric_limits<float>::max();
+    currentElevatedDuctTop[i] = -numeric_limits<float>::max();
     dMdzMin[i] = numeric_limits<float>::max();
-    dMdzMinHeight[i] = 0.;
+    surfaceDuctBottom[i] = numeric_limits<float>::max();
+	surfaceDuctTop[i] = -numeric_limits<float>::max();
+	elevatedDuctBottom[i] = numeric_limits<float>::max();
+	elevatedDuctTop[i] = -numeric_limits<float>::max();
+	noOfElevatedDucts[i] = 0.0f;
   }
 }
 
@@ -145,9 +196,47 @@ float Ducting::dMdz(int i, int j, float ps, float p, float t, float q)
     /// save lowest dMdz
     if (dMdz < dMdzMin[ind]) {
       dMdzMin[ind] = dMdz;
+    }
 
-      /// ... and matching height (Z)
-      dMdzMinHeight[ind] = zValue;
+    /// surface duct
+    /// WARNING: Assumes TOA as first level
+    if (zValue < THOUSAND_FEET_IN_METERS) {
+    	if(dMdz > 0 && zValue < surfaceDuctBottom[ind]) {
+    		surfaceDuctBottom[ind] = zValue;
+    	}
+
+    	if(dMdz > 0 && zValue > surfaceDuctTop[ind]) {
+    		surfaceDuctTop[ind] = zValue;
+    	}
+
+	/// elevated ducts
+	/// WARNING: Assumes TOA as first level
+	/// entering duct or already inside duct
+    } else { // zValue >= THOUSAND_FEET_IN_METERS
+		if (dMdz > 0) {
+			inDuct[ind] = 1.0;
+
+			if(zValue > currentElevatedDuctTop[ind])
+				currentElevatedDuctTop[ind] = zValue;
+		/// exiting duct
+		} else if (inDuct[ind]) {
+			inDuct[ind] = 0.0;
+			noOfElevatedDucts[ind]++;
+
+			//if(zValue < currentElevatedDuctBottom[ind])
+				currentElevatedDuctBottom[ind] = zValue;
+
+			// set new elevatedDuct if currentElevatedDuct is thicker
+			if(currentElevatedDuctTop[ind] - currentElevatedDuctBottom[ind] >
+				elevatedDuctTop[ind] - elevatedDuctBottom[ind]) {
+				elevatedDuctBottom[ind] = currentElevatedDuctBottom[ind];
+				elevatedDuctTop[ind] = currentElevatedDuctTop[ind];
+			}
+
+			// reset currentElevatedDuct
+			currentElevatedDuctBottom[ind] = numeric_limits<float>::max();
+			currentElevatedDuctTop[ind] = -numeric_limits<float>::max();
+		}
     }
 
     /// save current level as new previous level
