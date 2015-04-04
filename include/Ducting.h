@@ -28,8 +28,7 @@
 #define DUCTING_H_
 
 #include <cmath>
-
-#include <diField/diField.h>
+#include <cstddef>
 
 using namespace std;
 
@@ -42,6 +41,7 @@ private:
 	/// initializing constants
 	float p0;
 	float cp;
+	float r;
 	float rcp;
 	float eps;
 	

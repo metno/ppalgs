@@ -27,8 +27,7 @@
 #define ICING_
 
 #include <cmath>
-
-#include <diField/diField.h>
+#include <cstddef>
 
 using namespace std;
 
@@ -39,6 +38,7 @@ private:
 		
 	/// initializing constants
 	float p0;
+	float r;
 	float cp;
 	float rcp;
 	float rho;

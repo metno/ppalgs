@@ -40,19 +40,6 @@
 #include <time.h>
 #include <netcdf>
 
-#include <diField/diField.h>
-#include <diField/diFieldManager.h>
-#include <diField/diProjection.h>
-#include <diField/diFieldSource.h>
-#include <diField/diMetnoFieldFile.h>
-#include <diField/diMetConstants.h>
-
-#include <puTools/miCommandLine.h>
-#include <puTools/miString.h>
-#include <puTools/miTime.h>
-
-#include <milib/milib.h>
-
 using namespace std;
 
 Icing::Icing()
@@ -60,7 +47,8 @@ Icing::Icing()
   /// initializing constants
   p0 = 1000.;
   cp = 1004.;
-  rcp = MetNo::Constants::r / cp;
+  r = 287.;
+  rcp = r / cp;
   rho = 1.293;
 
   ///  g, acceleration of gravity
@@ -284,7 +272,7 @@ float* Icing::initW(int k, float boundarySouth, float dx, float dy, float af,
       float div = rhxy[ind] * (zrdx2 * (uu[i + 1 + (nx * j)] - uu[i - 1 + (nx
           * j)]) + zrdy2 * (vv[i + (nx * (j + 1))] - vv[i + (nx * (j - 1))]));
 
-      float w1 = MetNo::Constants::r * t[ind] * (dlnp[ind] * sum[ind] + alfa[ind] * div)
+      float w1 = r * t[ind] * (dlnp[ind] * sum[ind] + alfa[ind] * div)
           / dp[ind];
 
       float w2 = rhx[ind] * zrdx2 * (z[i + 1 + (nx * j)] - z[i - 1 + (nx * j)])

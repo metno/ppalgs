@@ -1,25 +1,24 @@
 # Makefile for ppalgs (was: ducting)
 
 LOCALDIR=/prod/forecast/opt
-IFORTLIB=/sw/sdev/intel/composerxe-2011.5.220/composerxe-2011.5.220/compiler/lib/intel64
 
 # Platform suffix
 PLT=
 
 # Compilers etc
-CXX=/usr/bin/g++
-CC=/usr/bin/gcc
+CXX=/sw/sdev/Modules/gcc/gcc-4.8.2/bin/g++
+#CC=/sw/sdev/Modules/gcc/gcc-4.8.2/bin/gcc
 
-#LD=/use/bin/gcc
+LD=icc
 #AR=ar
 #ARFLAGS=-cr
 
 # CXX-flags
-CXXFLAGS= -O3
+CXXFLAGS=# -O3
 CXXLDFLAGS=
 #
 # C-flags
-CFLAGS= -O3
+CFLAGS=# -O3
 CLDFLAGS=
 
 # log4cxx
@@ -43,21 +42,22 @@ LOCALINC=$(LOCALDIR)/include
 
 VPATH = src
 
-INCLUDE= -I./include -I$(INCDIR) -I$(LOCALINC)
+INCLUDE= -I./include -I$(INCDIR) -I/prod/forecast/lib/fimex/0.55.1/include \
+-I/sw/sdev/Modules/netcdf/netcdf-4.3.1/include
 
 LINKS=-L$(LOCALDIR)/lib \
-$(LOCALDIR)/lib/libmi_exp.a \
--lm \
--lproj \
--lfimex \
--lmiLogger \
--L$(IFORTLIB) -lifport -lifcore -limf -lsvml -lintlc
-#        -llog4cpp \
-#        -lboost_thread \
-#        -lboost_program_options
-# -lmi \
+-L/prod/forecast/lib/fimex/0.55.1/lib -lfimex \
+-lmiLogger -lxml2 -lexpat -lopenjpeg \
+-L/sw/sdev/Modules/netcdf/netcdf-4.3.1/lib -lnetcdf_c++4 \
+-lfelt -L/sw/sdev/Modules/boost/boost-1.48.0//lib \ 
+-lboost_date_time -lboost_filesystem  -lboost_iostreams \
+-lboost_program_options -lboost_regex \
+-L/sw/sdev/Modules/netcdf/netcdf-4.1.3/lib -lnetcdf -lnetcdf \
+-L/prod/forecast/lib/grib_api/1.9.9//lib -lgrib_api \
+-L/sw/sdev/Modules/proj/proj-4.7.0//lib -lproj \
+-L/sw/sdev/Modules/udunits/udunits-2.1.24//lib  -ludunits2  -lm
 
-OPTIONS=-fopenmp
+OPTIONS=-fopenmp -fPIC
 
 #----------------------------------------------------------------------------
 
@@ -92,7 +92,7 @@ directories:
 #----------------------------------------------------------------------------
 
 $(BINDIR)/ppalgs: $(ALLOBJ) 
-	$(CXX) -std=c++0x -o $@ $(CXXFLAGS) $(OPTIONS) -g $(ALLOBJ) $(LINKS)
+	$(LD) -std=c++0x -o $@ $(CXXFLAGS) $(OPTIONS) $(ALLOBJ) $(LINKS)
 
 #----------------------------------------------------------------------------
 

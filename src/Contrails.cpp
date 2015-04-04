@@ -40,19 +40,6 @@
 #include <time.h>
 #include <netcdf>
 
-#include <diField/diField.h>
-#include <diField/diFieldManager.h>
-#include <diField/diProjection.h>
-#include <diField/diFieldSource.h>
-#include <diField/diMetnoFieldFile.h>
-#include <diField/diMetConstants.h>
-
-#include <puTools/miCommandLine.h>
-#include <puTools/miString.h>
-#include <puTools/miTime.h>
-
-#include <milib/milib.h>
-
 using namespace std;
 
 struct threadArg_t {

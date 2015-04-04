@@ -41,19 +41,6 @@
 #include <time.h>
 #include <netcdf>
 
-#include <diField/diField.h>
-#include <diField/diFieldManager.h>
-#include <diField/diProjection.h>
-#include <diField/diFieldSource.h>
-#include <diField/diMetnoFieldFile.h>
-#include <diField/diMetConstants.h>
-
-#include <puTools/miCommandLine.h>
-#include <puTools/miString.h>
-#include <puTools/miTime.h>
-
-#include <milib/milib.h>
-
 using namespace std;
 
 
@@ -62,7 +49,8 @@ Ducting::Ducting()
   /// initializing constants
   p0 = 1000.;
   cp = 1004.;
-  rcp = MetNo::Constants::r / cp;
+  r = 287.;
+  rcp = r / cp;
   eps = 0.622;
 
   nx = 0;
