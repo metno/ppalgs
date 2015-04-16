@@ -1,15 +1,17 @@
 # Makefile for ppalgs (was: ducting)
 
-LOCALDIR=/prod/forecast/opt
+IFORTLIB=/sw/sdev/intel/composerxe-2011.5.220/composerxe-2011.5.220/compiler/lib/intel64
 
 # Platform suffix
 PLT=
 
 # Compilers etc
-CXX=/sw/sdev/Modules/gcc/gcc-4.8.2/bin/g++
+#CXX=/sw/sdev/Modules/gcc/gcc-4.8.2/bin/g++
 #CC=/sw/sdev/Modules/gcc/gcc-4.8.2/bin/gcc
-
+CXX=icc
 LD=icc
+
+#LD=/use/bin/gcc
 #AR=ar
 #ARFLAGS=-cr
 
@@ -21,41 +23,19 @@ CXXLDFLAGS=
 CFLAGS=# -O3
 CLDFLAGS=
 
-# log4cxx
-
-HASMILOGGER := $(shell test -f   $(LOCALDIR)/lib/libmiLogger.a && echo YES)
-
-ifeq ($(HASMILOGGER),YES)
-LOGGDEF=-DNOLOG4CXX
-LOGGLIBS=-L$(LOCALDIR)/lib -lmiLogger
-else
-#LOGGDEF=-DHAVE_LOG4CXX
-#LOGGINC=
-#LOGGLIBS=-L$(LOCALDIR)/lib -llog4cxx
-endif
-
-
 BINDIR=bin$(PLT)
 LIBDIR=lib$(PLT)
 INCDIR=.
-LOCALINC=$(LOCALDIR)/include
 
 VPATH = src
 
-INCLUDE= -I./include -I$(INCDIR) -I/prod/forecast/lib/fimex/0.55.1/include \
+INCLUDE= -I./include -I$(INCDIR) -I/prod/forecast/lib/fimex/0.57p1/include \
 -I/sw/sdev/Modules/netcdf/netcdf-4.3.1/include
 
-LINKS=-L$(LOCALDIR)/lib \
--L/prod/forecast/lib/fimex/0.55.1/lib -lfimex \
--lmiLogger -lxml2 -lexpat -lopenjpeg \
+LINKS=-L/prod/forecast/lib/fimex/0.57p1/lib -lfimex \
+-lxml2 -lexpat -lopenjpeg \
 -L/sw/sdev/Modules/netcdf/netcdf-4.3.1/lib -lnetcdf_c++4 \
--lfelt -L/sw/sdev/Modules/boost/boost-1.48.0//lib \ 
--lboost_date_time -lboost_filesystem  -lboost_iostreams \
--lboost_program_options -lboost_regex \
--L/sw/sdev/Modules/netcdf/netcdf-4.1.3/lib -lnetcdf -lnetcdf \
--L/prod/forecast/lib/grib_api/1.9.9//lib -lgrib_api \
--L/sw/sdev/Modules/proj/proj-4.7.0//lib -lproj \
--L/sw/sdev/Modules/udunits/udunits-2.1.24//lib  -ludunits2  -lm
+-lfelt -L/sw/sdev/Modules/boost/boost-1.55.0//lib -lboost_date_time -lboost_filesystem  -lboost_iostreams -lboost_program_options  -lboost_regex -L/prod/forecast/lib/grib_api/1.9.9//lib  -L/sw/sdev/Modules/netcdf/netcdf-4.1.3/lib -lnetcdf -lnetcdf -L/prod/forecast/lib/grib_api/1.9.9//lib -lgrib_api  -L/sw/sdev/Modules/proj/proj-4.7.0//lib -lproj   -L/sw/sdev/Modules/udunits/udunits-2.2.4//lib  -ludunits2  -lm
 
 OPTIONS=-fopenmp -fPIC
 
