@@ -237,28 +237,15 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 
 	shared_ptr<vector<double> > times = input->getTimes("specific_humidity_ml");
 	vector<pt::ptime> ptimes;
-	cout << "Available times:" << endl;
 	for(int time : *times) {
 		time_t tmp_time(time);
 		pt::ptime boost_time = pt::from_time_t(tmp_time);
 		ptimes.push_back(boost_time);
-		cout << boost_time << ": ";
 	}
-	cout << endl << endl;
 
 	shared_ptr<vector<double> > levels = input->getLevels("specific_humidity_ml");
-	cout << "Available levels:" << endl;
-	for (double level : *levels) {
-		cout << level << ": ";
-	}
-	cout << endl << endl;
 
-	cout << "nx: " << input->getNx("specific_humidity_ml") << endl
-			<< "ny: " << input->getNy("specific_humidity_ml") << endl << endl;
-
-	cout << "Reference time:" << endl;
 	pt::ptime refTime = input->getRefTime();
-	cout << refTime << endl;
 
 	//FIXME: check that the number of vertical levels matches in input and output, and
 	// that the horizontal dimensions match for all input and output 2D fields
@@ -333,8 +320,6 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 		output->writeSpatialGriddedLevel("icing_height_top", size, data, time);
 		}
 
-		copySpatialGriddedLevel(input, output, "surface_air_pressure", size, time);
-
 		icing.reset();
 		++time_offset;
 	}
@@ -363,28 +348,15 @@ void executeContrails(unique_ptr<FileHandler>& input,
 
 	shared_ptr<vector<double> > times = input->getTimes("specific_humidity_ml");
 	vector<pt::ptime> ptimes;
-	cout << "Available times:" << endl;
 	for(int time : *times) {
 		time_t tmp_time(time);
 		pt::ptime boost_time = pt::from_time_t(tmp_time);
 		ptimes.push_back(boost_time);
-		cout << boost_time << ": ";
 	}
-	cout << endl << endl;
 
 	shared_ptr<vector<double> > levels = input->getLevels("specific_humidity_ml");
-	cout << "Available levels:" << endl;
-	for (double level : *levels) {
-		cout << level << ": ";
-	}
-	cout << endl << endl;
 
-	cout << "nx: " << input->getNx("specific_humidity_ml") << endl
-			<< "ny: " << input->getNy("specific_humidity_ml") << endl << endl;
-
-	cout << "Reference time:" << endl;
 	pt::ptime refTime = input->getRefTime();
-	cout << refTime << endl;
 
 	//FIXME: check that the number of vertical levels matches in input and output, and
 	// that the horizontal dimensions match for all input and output 2D fields
@@ -450,8 +422,6 @@ void executeContrails(unique_ptr<FileHandler>& input,
 
 		output->writeSpatialGriddedLevel("contrails_top", size, data, time);
 		}
-
-		copySpatialGriddedLevel(input, output, "surface_air_pressure", size, time);
 
 		contrails.reset();
 		++time_offset;

@@ -16,11 +16,11 @@ LD=icc
 #ARFLAGS=-cr
 
 # CXX-flags
-CXXFLAGS=# -O3
+CXXFLAGS=-O3
 CXXLDFLAGS=
 #
 # C-flags
-CFLAGS=# -O3
+CFLAGS=-O3
 CLDFLAGS=
 
 BINDIR=bin$(PLT)
