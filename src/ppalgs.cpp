@@ -430,7 +430,7 @@ void executeContrails(unique_ptr<FileHandler>& input,
 
 int main(int argc, char* argv[]) {
 	//FIXME: this should probably be a commandline option
-	const std::string gribConfigFileName("/home/martinsa/tmp_metno/AromeMetCoOpGribReaderConfig.xml");
+	const std::string gribConfigFileName("AromeMetCoOpGribReaderConfig.xml");
 
 	string version_string = "1.0";
 	int startLevel, stopLevel;

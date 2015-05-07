@@ -2,11 +2,11 @@
 #==============================================================================
 # Master script for ppalgs (ducting/icing/contrails) runs
 # Expects one argument: UTC
-# Path: ~forecast/atmos/harmonie/job/
+# Path: ~forecast/atmos/harmonie/job/scripts
 #==============================================================================
 #
 # >> met.no/FoU	15.11.2011  Ole Vignes				... first version
-# >> MET/IT  	21.04.2015  Martin Lilleeng Sætra	Adapted for ppalgs
+# >> MET/IT  	29.04.2015  Martin Lilleeng Sætra	Adapted for ppalgs
 
 
 # Trace commands
@@ -54,19 +54,20 @@ trap 'Runstatus "FAILED ..." "$jobname" $maxnodes; exit 159' 0
 # Source local setup
 [ -f /etc/profile ] && . /etc/profile
 
-inpdir=$HOME/atmos/arome/input/
+inpdir=$HOME/atmos/harmonie/input/
 wrkdir=$HOME/run/ppalgs/
 [ -d $wrkdir ] || mkdir $wrkdir
 cd $wrkdir || { echo "Could not chdir $wrkdir"; exit; }
 # Cleanup
 rm -f ppalgs-*.nc
 rm -f *msg
+rm -f arome2_5km_ppalgs*.nc
 
 # Create start message
 echo "$jobname start" > arome2_5_ppalgs.start_msg
 
 # Get times
-DTG=$( ls /prod/cooper/run/AM25_oper/fc*+000grib )
+DTG=$( ls /prod/cooper/run/AM25_oper/fc*${utc}+000grib )
 yyyy=$( echo $DTG | cut -c30-33 )
 mm=$( echo $DTG | cut -c34-35 )
 dd=$( echo $DTG | cut -c36-37 )
@@ -85,9 +86,10 @@ times=00,03,06,09,12,15,18,21,24,30,36,42,48,54,60,66
 ntimes=$( perl -e 'split(",",shift);print $#_+1' $times )
 
 # Fimex needs these
-cp $inpdir/ducting_pl.ncml .
-cp $inpdir/icing_index_pl.ncml .
-cp $inpdir/contrails_pl.ncml .
+cp $inpdir/ml2pl.ncml .
+
+# ppalgs needs this file:
+cp $inpdir/AromeMetCoOpGribReaderConfig.xml .
 
 for time in ${times//,/ }; do
   ## The following block is executed in parallel over all tasks
@@ -107,23 +109,15 @@ for time in ${times//,/ }; do
     
     ## Convert ml -> pl using fimex (FIXME: use linear_weak_extra when available)
     tmp_nc_file_pl=ppalgs-$yyyy$mm$dd$hh-${time}_plevels.nc
-    
-    $fimex --ncml.config=ducting_pl.ncml \
+
+    $fimex --ncml.config=ml2pl.ncml \
      --verticalInterpolate.type pressure --verticalInterpolate.method linear \
      --verticalInterpolate.level1 1000,925,850,800,700,500,400,300,250,200,150,100,70,50,30,10 \
-     --input.file $tmp_nc_file_ml --input.type nc4 --extract.selectVariables ducting_ml \
-     --output.file $tmp_nc_file_pl --output.type nc4
-     
-    $fimex --ncml.config=icing_index_pl.ncml \
-     --verticalInterpolate.type pressure --verticalInterpolate.method linear \
-     --verticalInterpolate.level1 1000,925,850,800,700,500,400,300,250,200,150,100,70,50,30,10 \
-     --input.file $tmp_nc_file_ml --input.type nc4 --extract.selectVariables icing_index_ml \
-     --output.file $tmp_nc_file_pl --output.type nc4
-     
-    $fimex --ncml.config=contrails_pl.ncml \
-     --verticalInterpolate.type pressure --verticalInterpolate.method linear \
-     --verticalInterpolate.level1 1000,925,850,800,700,500,400,300,250,200,150,100,70,50,30,10 \
-     --input.file $tmp_nc_file_ml --input.type nc4 --extract.selectVariables contrails_ml \
+     --input.file $tmp_nc_file_ml --input.type nc4 \
+     --extract.selectVariables ducting_ml \
+     --extract.selectVariables icing_index_ml \
+     --extract.selectVariables contrails_ml \
+     --extract.selectVariables forecast_reference_time \
      --output.file $tmp_nc_file_pl --output.type nc4
   } 1>task$task.log 2>&1 &
 
