@@ -158,7 +158,7 @@ public:
 	 * Lowest height of surface duct (below 1000 ft)
 	 *
 	 * NOTE:
-	 * - dM/dz > 0 indicates a duct
+	 * - dM/dz < 0 indicates a duct
 	 * - if multiple ducts are present, the thickest is chosen
 	 * - if multiple ducts have the same thickness, the lowest is chosen
 	 */
@@ -168,7 +168,7 @@ public:
 	 * Highest height of surface duct (below 1000 ft)
 	 *
 	 * NOTE:
-	 * - dM/dz > 0 indicates a duct
+	 * - dM/dz < 0 indicates a duct
 	 * - if multiple ducts are present, the thickest is chosen
 	 * - if multiple ducts have the same thickness, the lowest is chosen
 	 */
@@ -178,7 +178,7 @@ public:
 	 * Lowest height of elevated duct (1000 ft or higher)
 	 *
 	 * NOTE:
-	 * - dM/dz > 0 indicates a duct
+	 * - dM/dz < 0 indicates a duct
 	 * - if multiple ducts are present, the thickest is chosen
 	 * - if multiple ducts have the same thickness, the lowest is chosen
 	 */
@@ -188,7 +188,7 @@ public:
 	 * Highest height of elevated duct (1000 ft or higher)
 	 *
 	 * NOTE:
-	 * - dM/dz > 0 indicates a duct
+	 * - dM/dz < 0 indicates a duct
 	 * - if multiple ducts are present, the thickest is chosen
 	 * - if multiple ducts have the same thickness, the lowest is chosen
 	 */

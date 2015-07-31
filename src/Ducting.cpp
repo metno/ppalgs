@@ -189,11 +189,11 @@ float Ducting::dMdz(int i, int j, float ps, float p, float t, float q)
     /// surface duct
     /// WARNING: Assumes TOA as first level
     if (zValue < THOUSAND_FEET_IN_METERS) {
-    	if(dMdz > 0 && zValue < surfaceDuctBottom[ind]) {
+    	if(dMdz < 0 && zValue < surfaceDuctBottom[ind]) {
     		surfaceDuctBottom[ind] = zValue;
     	}
 
-    	if(dMdz > 0 && zValue > surfaceDuctTop[ind]) {
+    	if(dMdz < 0 && zValue > surfaceDuctTop[ind]) {
     		surfaceDuctTop[ind] = zValue;
     	}
 
@@ -201,7 +201,7 @@ float Ducting::dMdz(int i, int j, float ps, float p, float t, float q)
 	/// WARNING: Assumes TOA as first level
 	/// entering duct or already inside duct
     } else { // zValue >= THOUSAND_FEET_IN_METERS
-		if (dMdz > 0) {
+		if (dMdz < 0) {
 			inDuct[ind] = 1.0;
 
 			if(zValue > currentElevatedDuctTop[ind])
