@@ -1,6 +1,6 @@
 # Makefile for ppalgs (was: ducting)
 
-LOCALDIR := /home/martinsa/local_old_metlibs
+LOCALDIR := /home/martinsa/local
 
 ifndef USRLOCAL
   USRLOCAL := /usr/local
@@ -51,36 +51,44 @@ LIBDIR=lib$(PLT)
 INCDIR=.
 LOCALINC=$(LOCALDIR)/include
 
-VPATH = src
+VPATH = src test
 
 INCLUDE= -I./include -I$(INCDIR) -I$(LOCALINC) $(NETCDFINCLUDE) $(UDUNITSINCLUDE)
 
 LINKS = -L$(LOCALDIR)/$(LIBDIR) \
         -lmiLogger \
-        -L$(LOCALDIR)/$(LIBDIR) -lmi \
+        -L$(LOCALDIR)/$(LIBDIR) \
         $(F2CLIB) -lm \
         $(UDUNITSLIBDIR) $(UDUNITSLIB) \
         $(NETCDFLIBDIR) $(NETCDFLIB) \
         -llog4cpp \
         -lboost_thread -lboost_date_time -lboost_program_options \
 		-lproj \
+		-lmpi_cxx \
 		-lfimex \
 		$(shell pkg-config --libs libcurl) \
         $(shell pkg-config --libs libpqxx)
+
+LINKS_TEST = -L$(LOCALDIR)/$(LIBDIR) \
+        -lboost_unit_test_framework \
+        -lmiLogger
 
 OPTIONS=-fopenmp
 
 #----------------------------------------------------------------------------
 
 all: directories version $(BINDIR)/ppalgs
+test: all $(BINDIR)/test
 
 #----------------------------------------------------------------------------
 
 CXXOBJ= Ducting.o Icing.o Contrails.o NetCDFHandler.o GribHandler.o ppalgs.o
+CXXOBJ_TEST= Ducting.o Icing.o Contrails.o NetCDFHandler.o GribHandler.o ppalgs_test.o
 
 #----------------------------------------------------------------------------
 
-CXXSRC= Ducting.cpp Icing.cpp Contrails.cpp NetCDFHandler.cpp GribHandler.cpp ppalgs.cpp 
+CXXSRC= Ducting.cpp Icing.cpp Contrails.cpp NetCDFHandler.cpp GribHandler.cpp ppalgs.cpp
+CXXSRC_TEST= ppalgs_test.cpp
 
 ALLSRC= $(CXXSRC)
 ALLOBJ= $(CXXOBJ)
@@ -99,6 +107,12 @@ ALLOBJ= $(CXXOBJ)
 
 directories:
 	if [ ! -d $(BINDIR) ] ; then mkdir $(BINDIR) ; fi
+
+#----------------------------------------------------------------------------
+
+$(BINDIR)/test: $(CXXOBJ_TEST)
+	$(CXX) -std=c++0x -o $@ $(CXXFLAGS) $(CXXOBJ_TEST) $(LINKS) $(LINKS_TEST)
+	BOOST_TEST_LOG_LEVEL=test_suite $(BINDIR)/test
 
 #----------------------------------------------------------------------------
 
