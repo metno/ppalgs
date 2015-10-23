@@ -429,14 +429,12 @@ void executeContrails(unique_ptr<FileHandler>& input,
 }
 
 int main(int argc, char* argv[]) {
-	//FIXME: this should probably be a commandline option
-	const std::string gribConfigFileName("AromeMetCoOpGribReaderConfig.xml");
-
 	string version_string = "1.0";
 	int startLevel, stopLevel;
 	startLevel = -1;
 	stopLevel = -1;
 	pt::ptime startTime, stopTime;
+	string gribConfigFileName;
 
 	// Declare the supported options.
 	po::options_description cmdline_options;
@@ -450,7 +448,8 @@ int main(int argc, char* argv[]) {
 			("times,t", po::value<vector<string> >(), "compute only given time interval (as ISO datetime, e.g., 2014-08-18T17:50:11): <from> <to>")
 			("input-type", po::value<string>(), "file format of input-file")
 			("output-type", po::value<string>(), "file format of output-file")
-			("extra,e", po::value<vector<string> >(), "additional input-file");
+			("extra,e", po::value<vector<string> >(), "additional input-file")
+			("config", po::value<string>(), "grib config file");
 
 	po::options_description hidden("Hidden options");
 	hidden.add_options()
@@ -509,6 +508,15 @@ int main(int argc, char* argv[]) {
 		cerr << "Input- and/or output file type(s) not specified, exiting."
 				<< endl;
 		return -3;
+	}
+	if (vm["input-type"].as<string>().compare("grib") == 0) {
+		if(vm.count("config")) {
+			gribConfigFileName = vm["config"].as<string>();
+		} else {
+			cerr << "Grib config file not given, exiting."
+				<< endl;
+			return -4;
+		}
 	}
 
 	// handle input/output
