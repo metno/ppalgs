@@ -429,7 +429,7 @@ void executeContrails(unique_ptr<FileHandler>& input,
 }
 
 int main(int argc, char* argv[]) {
-	string version_string = "1.0";
+	string version_string = "1.1";
 	int startLevel, stopLevel;
 	startLevel = -1;
 	stopLevel = -1;

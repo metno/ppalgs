@@ -125,8 +125,18 @@ void Icing::reset()
   }
 }
 
+template <typename T>
+bool isCloseToZero(T x)
+{
+    return std::abs(x) < std::numeric_limits<T>::epsilon();
+}
+
 int Icing::A(float cw, float t)
 {
+  // avoid log(0) for very small values of cw
+  if(isCloseToZero(cw))
+	  cw = 0.f;
+
   float A;
   float C = t - 273.15;
 
