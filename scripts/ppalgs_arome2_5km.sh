@@ -88,9 +88,6 @@ ntimes=$( perl -e 'split(",",shift);print $#_+1' $times )
 # Fimex needs these
 cp $inpdir/ml2pl.ncml .
 
-# ppalgs needs this file:
-cp $inpdir/AromeMetCoOpGribReaderConfig.xml .
-
 for time in ${times//,/ }; do
   ## The following block is executed in parallel over all tasks
   { 
@@ -101,11 +98,11 @@ for time in ${times//,/ }; do
     cp $inpdir/ppalgs_template.nc $tmp_nc_file_ml
 
     ## Perform the various ducting/icing/contrails computations
-    $ppalgs $gribfile $tmp_nc_file_ml --input-type=grib --output-type=nc -d
+    $ppalgs $gribfile $tmp_nc_file_ml --input-type=grib --output-type=nc --config=$inpdir/AromeMetCoOpGribReaderConfig.xml -d
 
-    $ppalgs $gribfile $tmp_nc_file_ml --input-type=grib --output-type=nc -i
+    $ppalgs $gribfile $tmp_nc_file_ml --input-type=grib --output-type=nc --config=$inpdir/AromeMetCoOpGribReaderConfig.xml -i
 
-    $ppalgs $gribfile $tmp_nc_file_ml --input-type=grib --output-type=nc -c
+    $ppalgs $gribfile $tmp_nc_file_ml --input-type=grib --output-type=nc --config=$inpdir/AromeMetCoOpGribReaderConfig.xml -c
     
     ## Convert ml -> pl using fimex (FIXME: use linear_weak_extra when available)
     tmp_nc_file_pl=ppalgs-$yyyy$mm$dd$hh-${time}_plevels.nc
