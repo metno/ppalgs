@@ -78,8 +78,8 @@ ppalgs=$HOME/src/ppalgs/bin/ppalgs
 fimex=$HOME/bin/fimex-0.58
 
 ## Output file names
-output_ml=arome2_5km_ppalgs${utc}.nc
-output_pl=arome2_5km_ppalgs_plevels${utc}.nc
+output_ml=arome2_5km_ppalgs_${yyyy}${mm}${dd}T${utc}Z.nc
+output_pl=arome2_5km_ppalgs_plevels_${yyyy}${mm}${dd}T${utc}Z.nc
 
 ## Set times at which to do ppalgs
 times=00,03,06,09,12,15,18,21,24,30,36,42,48,54,60,66
