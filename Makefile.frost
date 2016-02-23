@@ -1,0 +1,153 @@
+# Makefile for ppalgs (was: ducting)
+# Loaded modules:
+# netcdf/4.3.2-i1501-impi-5.0.2.044-hdf5-1.8.14
+# buildenv-intel/2015-1
+#
+# Runs OK: [metno_op@frost ppalgs]$ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/opt/grib_api-1.13.1p1/lib/:~/opt/boost_1.58/lib/ bin/ppalgs
+
+LOCALDIR=/home/metno_op/opt
+IFORTLIB=/software/apps/intel/composer_xe_2015.1.133/compiler/lib/intel64
+
+# Platform suffix
+PLT=
+
+# Compilers etc
+CXX=icc
+CC=icc
+
+#LD=/use/bin/gcc
+#AR=ar
+#ARFLAGS=-cr
+
+# CXX-flags
+CXXFLAGS= -O3
+CXXLDFLAGS=
+#
+# C-flags
+CFLAGS= -O3
+CLDFLAGS=
+
+# log4cxx
+
+HASMILOGGER := $(shell test -f   $(LOCALDIR)/lib/libmiLogger.a && echo YES)
+
+ifeq ($(HASMILOGGER),YES)
+LOGGDEF=-DNOLOG4CXX
+LOGGLIBS=-L$(LOCALDIR)/lib -lmiLogger
+else
+#LOGGDEF=-DHAVE_LOG4CXX
+#LOGGINC=
+#LOGGLIBS=-L$(LOCALDIR)/lib -llog4cxx
+endif
+
+BINDIR=bin$(PLT)
+LIBDIR=lib$(PLT)
+INCDIR=.
+LOCALINC=$(LOCALDIR)/include
+
+VPATH = src test
+
+INCLUDE= -I./include -I$(INCDIR) -I$(HOME)/opt/fimex-0.58/include \
+-I/software/apps/netcdf/4.3.2/i1501-impi-5.0.2.044-hdf5-1.8.14/include -I$(HOME)/opt/boost_1.58/include
+
+LINKS=-L$(LOCALDIR)/lib \
+-L$(HOME)/opt/fimex-0.58/lib -lfimex \
+-lm \
+-lxml2 \
+-lproj \
+-lmiLogger \
+-L$(HOME)/opt/grib_api-1.13.1p1/lib -lgrib_api \
+-L/software/apps/netcdf/4.3.2/i1501-impi-5.0.2.044-hdf5-1.8.14/lib -lnetcdf -lnetcdf_c++4 \
+-lfelt \
+-L$(HOME)/opt/boost_1.58/lib -lboost_system -lboost_date_time -lboost_filesystem  -lboost_iostreams -lboost_program_options  -lboost_regex \
+-LL$(HOME)/opt/udunits-2.2.19/lib -ludunits2 \
+-L$(IFORTLIB) -lifport -lifcore -limf -lsvml -lintlc -ldl
+
+LINKS_TEST = -L$(LOCALDIR)/$(LIBDIR) \
+        -lboost_unit_test_framework \
+        -lmiLogger
+
+OPTIONS=-fopenmp
+
+#----------------------------------------------------------------------------
+
+all: directories version $(BINDIR)/ppalgs
+test: all $(BINDIR)/test
+
+#----------------------------------------------------------------------------
+
+CXXOBJ= Ducting.o Icing.o Contrails.o NetCDFHandler.o GribHandler.o ppalgs.o
+CXXOBJ_TEST= Ducting.o Icing.o Contrails.o NetCDFHandler.o GribHandler.o ppalgs_test.o
+
+#----------------------------------------------------------------------------
+
+CXXSRC= Ducting.cpp Icing.cpp Contrails.cpp NetCDFHandler.cpp GribHandler.cpp ppalgs.cpp
+CXXSRC_TEST= ppalgs_test.cpp
+
+ALLSRC= $(CXXSRC)
+ALLOBJ= $(CXXOBJ)
+
+#----------------------------------------------------------------------------
+
+# From .cpp to .o
+%.o: %.cpp
+	$(CXX) -std=c++0x $(CXXFLAGS) -c $< $(INCLUDE)
+
+# From .c to .o
+%.o: %.c
+	$(CC) -c $(CXXFLAGS) $< $(INCLUDE)
+
+#---------------------------------------------------------------------------
+
+directories:
+	if [ ! -d $(BINDIR) ] ; then mkdir $(BINDIR) ; fi
+
+#----------------------------------------------------------------------------
+
+$(BINDIR)/test: $(CXXOBJ_TEST)
+	$(CXX) -std=c++0x -o $@ $(CXXFLAGS) $(CXXOBJ_TEST) $(LINKS) $(LINKS_TEST)
+	BOOST_TEST_LOG_LEVEL=test_suite $(BINDIR)/test
+
+#----------------------------------------------------------------------------
+
+$(BINDIR)/ppalgs: $(ALLOBJ) 
+	$(CXX) -std=c++0x -o $@ $(CXXFLAGS) $(OPTIONS) $(ALLOBJ) $(LINKS)
+
+#----------------------------------------------------------------------------
+
+VERSIONHEADER=ppalgsVersion.h
+version:
+	@if [ -s $(VERSIONHEADER) ]; then \
+	  olddate=`grep version_string $(VERSIONHEADER) | cut -f2 -d\"`; \
+	else \
+	  olddate="firsttime"; \
+	fi; \
+	today=`date +%Y-%m-%d`; \
+	if [ ! $$olddate = $$today ]; then \
+	  rm -f $(VERSIONHEADER); \
+	  echo '#ifndef _version_h_' > $(VERSIONHEADER); \
+	  echo '#define _version_h_' >> $(VERSIONHEADER); \
+	  echo 'const std::string version_string= "'$$today'";' >> $(VERSIONHEADER); \
+	  echo '#endif' >> $(VERSIONHEADER); \
+	  chmod 0664 $(VERSIONHEADER); \
+	  echo "UPDATED $(VERSIONHEADER) $$today"; \
+	else \
+	  echo "UNCHANGED $(VERSIONHEADER) $$olddate"; \
+	fi
+
+#----------------------------------------------------------------------------
+
+pretty:
+	find . \( -name 'core' -o -name '*~' \) -exec rm -f {} \;
+
+binclean:
+	rm -f $(BINDIR)/ppalgs
+
+clean:
+	@make -fMakefile.workstation pretty
+	rm -f *.o
+
+veryclean:
+	@make -fMakefile.workstation pretty
+	@make -fMakefile.workstation binclean
+	@make -fMakefile.workstation clean
