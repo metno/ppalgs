@@ -1,7 +1,7 @@
 #!/bin/sh
-#PBS -o /prod/forecast/work/atmos/harmonie/tmp/arome_arctic_ppalgs.log
+#PBS -o /prod/forecast/work/atmos/harmonie/tmp/aa_ppalgs.log
 #PBS -j oe
-#PBS -N arome_arctic_ppalgs00
+#PBS -N aa25_ppalgs00
 #PBS -A mipa05nm
 #PBS -k n
 #PBS -l select=1:ncpus=32:mem=29gb
@@ -12,7 +12,7 @@
 
 UTC=00
 
-logfile=$HOME/run/ppalgs_arctic/arome_arctic_ppalgs${UTC}.log
+logfile=$HOME/run/ppalgs_arctic/aa_ppalgs${UTC}.log
 rm -f $logfile
 
 exec 1>$logfile 2>&1

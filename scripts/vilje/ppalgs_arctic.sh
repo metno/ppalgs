@@ -7,7 +7,7 @@
 #
 # >> met.no/FoU	15.11.2011  Ole Vignes				... first version
 # >> MET/IT  	29.04.2015  Martin Lilleeng Sætra	Adapted for ppalgs
-
+# >> MET/IT     02.03.2016  Martin Lilleeng Sætra / arildb  Adapted for arome arctic
 
 # Trace commands
 set -x
@@ -41,7 +41,7 @@ module load intelcomp/14.0.1
 # END Load necessary modules
 
 # Set jobname. This is used in the start and end messages
-jobname="am_ppalgs${utc} = Arome 2.5 ducting/icing/contrails ${utc}z"
+jobname="aa_ppalgs${utc} = Arome Arctic ducting/icing/contrails ${utc}z"
 maxnodes=1
 
 # Include common HIRLAM shell functions
@@ -55,19 +55,19 @@ trap 'Runstatus "FAILED ..." "$jobname" $maxnodes; exit 159' 0
 [ -f /etc/profile ] && . /etc/profile
 
 inpdir=$HOME/atmos/harmonie/input/
-wrkdir=$HOME/run/ppalgs/
+wrkdir=$HOME/run/ppalgs_arctic/
 [ -d $wrkdir ] || mkdir $wrkdir
 cd $wrkdir || { echo "Could not chdir $wrkdir"; exit; }
 # Cleanup
 rm -f ppalgs-*.nc
 rm -f *msg
-rm -f arome2_5km_ppalgs*.nc
+rm -f arome_arctic_2_5km_ppalgs*.nc
 
 # Create start message
-echo "$jobname start" > arome2_5_ppalgs.start_msg
+echo "$jobname start" > arome_arctic_ppalgs.start_msg
 
 # Get times
-DTG=$( ls /prod/cooper/run/AM25_oper/fc*${utc}+000grib )
+DTG=$( ls /prod/forecast/run/AROME_Arctic/fc*${utc}+000grib )
 yyyy=$( echo $DTG | cut -c30-33 )
 mm=$( echo $DTG | cut -c34-35 )
 dd=$( echo $DTG | cut -c36-37 )
@@ -78,8 +78,8 @@ ppalgs=$HOME/src/ppalgs/bin/ppalgs
 fimex=$HOME/bin/fimex-0.58
 
 ## Output file names
-output_ml=arome2_5km_ppalgs_${yyyy}${mm}${dd}T${utc}Z.nc
-output_pl=arome2_5km_ppalgs_plevels_${yyyy}${mm}${dd}T${utc}Z.nc
+output_ml=arome_arctic_2_5km_ppalgs_${yyyy}${mm}${dd}T${utc}Z.nc
+output_pl=arome_arctic_2_5km_ppalgs_plevels_${yyyy}${mm}${dd}T${utc}Z.nc
 
 ## Set times at which to do ppalgs
 times=00,03,06,09,12,15,18,21,24,30,36,42,48,54,60,66
@@ -91,11 +91,11 @@ cp $inpdir/ml2pl.ncml .
 for time in ${times//,/ }; do
   ## The following block is executed in parallel over all tasks
   { 
-    gribfile=/prod/cooper/run/AM25_oper/fc$yyyy$mm$dd$hh+0${time}grib
+    gribfile=/prod/forecast/run/AROME_Arctic/fc$yyyy$mm$dd$hh+0${time}grib
     
     ## Copy nc template files
     tmp_nc_file_ml=ppalgs-$yyyy$mm$dd$hh-$time.nc
-    cp $inpdir/ppalgs_template.nc $tmp_nc_file_ml
+    cp $inpdir/ppalgs_arctic_template.nc $tmp_nc_file_ml
 
     ## Perform the various ducting/icing/contrails computations
     $ppalgs $gribfile $tmp_nc_file_ml --input-type=grib --output-type=nc --config=$inpdir/AromeMetCoOpGribReaderConfig.xml -d
@@ -127,12 +127,12 @@ wait
 ls -ltr
 
 ## Aggregate timesteps with fimex
-agrdir_ml=$HOME/run/ppalgs/aggregate_ml/
+agrdir_ml=$HOME/run/ppalgs_arctic/aggregate_ml/
 rm -f $agrdir_ml/*
 [ -d $agrdir_ml ] || mkdir $agrdir_ml
 cp $inpdir/aggregate.ncml $agrdir_ml
 
-agrdir_pl=$HOME/run/ppalgs/aggregate_pl/
+agrdir_pl=$HOME/run/ppalgs_arctic/aggregate_pl/
 rm -f $agrdir_pl/*
 [ -d $agrdir_pl ] || mkdir $agrdir_pl
 cp $inpdir/aggregate.ncml $agrdir_pl
@@ -158,7 +158,7 @@ cp $output_pl ..
 cd $wrkdir || { echo "Could not chdir $wrkdir"; exit; }
 echo 1 > ${output_ml}msg
 echo 1 > ${output_pl}msg
-echo "$jobname end" > arome2_5_ppalgs.end_msg
+echo "$jobname end" > arome_arctic_ppalgs.end_msg
 
 Runstatus "end ......" "$jobname" $maxnodes
 trap 0

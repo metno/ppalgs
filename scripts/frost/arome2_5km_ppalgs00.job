@@ -1,0 +1,23 @@
+#!/bin/sh 
+#SBATCH -A met
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=16
+#SBATCH --time=01:00:00 
+#SBATCH --job-name=am25_ppalgs00
+#SBATCH -v 
+#SBATCH -o /dev/null
+#SBATCH -e /dev/null
+
+# Path: ~metno_op/atmos/harmonie/job/
+
+UTC=00
+
+logfile=$HOME/run/ppalgs/am_ppalgs${UTC}.log
+rm -f $logfile
+
+exec 1>$logfile 2>&1
+
+set -x
+
+$HOME/atmos/harmonie/job/scripts/ppalgs_arome2_5km.sh $UTC
+
