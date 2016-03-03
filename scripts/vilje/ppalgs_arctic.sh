@@ -66,12 +66,13 @@ rm -f arome_arctic_2_5km_ppalgs*.nc
 # Create start message
 echo "$jobname start" > arome_arctic_ppalgs.start_msg
 
+#      ls /prod/cooper/run/AM25_oper/fc*${utc}+000grib
 # Get times
 DTG=$( ls /prod/forecast/run/AROME_Arctic/fc*${utc}+000grib )
-yyyy=$( echo $DTG | cut -c30-33 )
-mm=$( echo $DTG | cut -c34-35 )
-dd=$( echo $DTG | cut -c36-37 )
-hh=$( echo $DTG | cut -c38-39 )
+yyyy=$( echo $DTG | cut -c35-38 )
+mm=$( echo $DTG | cut -c39-40 )
+dd=$( echo $DTG | cut -c41-42 )
+hh=$( echo $DTG | cut -c43-44 )
 
 ## Location of program
 ppalgs=$HOME/src/ppalgs/bin/ppalgs
