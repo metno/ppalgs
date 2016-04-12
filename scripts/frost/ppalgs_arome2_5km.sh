@@ -8,7 +8,7 @@
 # >> met.no/FoU	15.11.2011  Ole Vignes				... first version
 # >> MET/IT  	29.04.2015  Martin Lilleeng Sætra	Adapted for ppalgs
 # >> MET/IT     02.03.2016  Martin Lilleeng Sætra / arildb   Adapted for frost hpc
-
+# >> MET/IT     16.03.2016  Martin Lilleeng Sætra / arildb   Changed from 3hr interval to 1hr
 
 # Trace commands
 set -x
@@ -66,7 +66,8 @@ output_ml=arome2_5km_ppalgs_${yyyy}${mm}${dd}T${utc}Z.nc
 output_pl=arome2_5km_ppalgs_plevels_${yyyy}${mm}${dd}T${utc}Z.nc
 
 ## Set times at which to do ppalgs
-times=00,03,06,09,12,15,18,21,24,30,36,42,48,54,60,66
+#times=00,03,06,09,12,15,18,21,24,30,36,42,48,54,60,66
+times=00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66
 ntimes=$( perl -e 'split(",",shift);print $#_+1' $times )
 
 # Fimex needs these

@@ -5,7 +5,7 @@
 #PBS -A mipa05nm
 #PBS -k n
 #PBS -l select=1:ncpus=32:mem=29gb
-#PBS -l walltime=01:00:00
+#PBS -l walltime=01:30:00
 #PBS -m n
 
 # Path: ~forecast/atmos/harmonie/job/
