@@ -219,7 +219,7 @@ void executeDucting(unique_ptr<FileHandler>& input,
  * 1 - geopotential_height - not needed, as vertical velocity w is available in AROME MetCoOp (as upward_air_velocity_ml)
  * 18 - air_potential_temperature - use air_temperature_ml, and compute potential temperature
  * 13 - omega (lagrangian_tendency_of_air_pressure) - not needed, as vertical velocity w is available in AROME MetCoOp (as upward_air_velocity_ml)
- * 22 - cloud_liquid_water_content_of_atmosphere_layer - ga_76_253_251_109 (will be atmosphere_cloud_condensed_water_content_ml???)
+ * 22 - cloud_liquid_water_content_of_atmosphere_layer - atmosphere_cloud_condensed_water_content_ml
  * 8 - ps (air_pressure_at_sea_level) - air_pressure_at_sea_level
  */
 void executeIcing(unique_ptr<FileHandler>&  input,
@@ -270,7 +270,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 
 			/// read fields/data
 			boost::shared_array<float> t = input->readSpatialGriddedLevel("air_temperature_ml", time, level);
-			boost::shared_array<float> cw = input->readSpatialGriddedLevel("ga_76_253_251_109", time, level);
+			boost::shared_array<float> cw = input->readSpatialGriddedLevel("atmosphere_cloud_condensed_water_content_ml", time, level);
 			boost::shared_array<float> w = input->readSpatialGriddedLevel("upward_air_velocity_ml", time, level);
 
 			float ap = input->readSingleValueLevel("ap0", time, level);
