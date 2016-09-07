@@ -248,18 +248,19 @@ void Ducting::calcDuctingGrads2D(int nx, int ny, float ap, float b,
     initialize(nx, ny);
   }
 
+#pragma omp parallel for
   for (int j = 0; j < ny; ++j) {
     for (int i = 0; i < nx; ++i) {
+      int ij = i + (nx * j);
       float pVal = 0;
       if (p == NULL) {
-        pVal = ap + b * (ps[i + (nx * j)]);
+        pVal = ap + b * (ps[ij]);
       } else {
-        pVal = p[i + (nx * j)];
+        pVal = p[ij];
       }
 
       // (scale pressure Pa -> hPa)
-      data[i + (nx * j)] = dMdz(i, j, ps[i + (nx * j)] * 0.01, pVal * 0.01, t[i
-          + (nx * j)], q[i + (nx * j)]);
+      data[ij] = dMdz(i, j, ps[ij] * 0.01, pVal * 0.01, t[ij], q[ij]);
     }
   }
 }

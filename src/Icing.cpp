@@ -323,35 +323,37 @@ void Icing::calcIcingIndices2D(int nx, int ny, float ap, float b, float *data,
     initialize(nx, ny);
   }
 
+#pragma omp parallel for
   for (int j = 0; j < ny; ++j) {
     for (int i = 0; i < nx; ++i) {
+      int ij = i + (nx * j);
       float pVal = 0;
       if (p == NULL) {
-    	  pVal = ap + b * (ps[i + (nx * j)]);
+    	  pVal = ap + b * (ps[ij]);
       } else {
-    	  pVal = p[i + (nx * j)];
+    	  pVal = p[ij];
       }
       // (scale pressure Pa -> hPa)
-      float zValue = ::z(t[i + (nx * j)], pVal * 0.01, ps[i + (nx * j)] * 0.01);
+      float zValue = ::z(t[ij], pVal * 0.01, ps[ij] * 0.01);
       ///FIXME: double-check conversions!
-      int AValue = A(1000 * cw[i + (nx * j)], t[i + (nx * j)]); ///< convert kg/kg -> g/kg
+      int AValue = A(1000 * cw[ij], t[ij]); ///< convert kg/kg -> g/kg
 
-      data[i + (nx * j)] = B(AValue, w[i + (nx * j)] * 100); ///< convert m/s -> cm/s
+      data[ij] = B(AValue, w[ij] * 100); ///< convert m/s -> cm/s
 
       /// save highest icingindex and current height
-      if (data[i + (nx * j)] > icingindexMax[i + (nx * j)]) {
-        icingindexMax[i + (nx * j)] = data[i + (nx * j)];
-        icingindexMaxHeight[i + (nx * j)] = zValue*ONE_FEET; ///< convert to ft
+      if (data[ij] > icingindexMax[ij]) {
+        icingindexMax[ij] = data[ij];
+        icingindexMaxHeight[ij] = zValue*ONE_FEET; ///< convert to ft
       }
       /// save bottom and top layer with icingindex > 4
       /// NOTE: Assumes layer 1 is TOA
-      if (data[i + (nx * j)] > 4) {
-        if (icingindexTopGt4[i + (nx * j)] == 0) {
-          icingindexTopGt4[i + (nx * j)] = zValue*ONE_FEET; ///< convert to ft
+      if (data[ij] > 4) {
+        if (icingindexTopGt4[ij] == 0) {
+          icingindexTopGt4[ij] = zValue*ONE_FEET; ///< convert to ft
           // make sure bottom value is initialized (in case there are icing only in one level/height)
-          icingindexBottomGt4[i + (nx * j)] = zValue*ONE_FEET; ///< convert to ft
+          icingindexBottomGt4[ij] = zValue*ONE_FEET; ///< convert to ft
         } else {
-          icingindexBottomGt4[i + (nx * j)] = zValue*ONE_FEET; ///< convert to ft
+          icingindexBottomGt4[ij] = zValue*ONE_FEET; ///< convert to ft
         }
       }
     }
