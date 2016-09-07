@@ -271,53 +271,57 @@ void Contrails::calcContrails2D(int nx, int ny, float ap, float b, float *data,
 
   float *tCritValues = new float[nx * ny];
 
+#pragma omp parallel for
   for (int j = 0; j < ny; ++j) {
     for (int i = 0; i < nx; ++i) {
+      int ij = i + (nx * j);
       float pVal = 0;
-	  if (p == NULL) {
-		pVal = ap + b * (ps[i + (nx * j)]);
-	  } else {
-		pVal = p[i + (nx * j)];
-	  }
+      if (p == NULL) {
+	pVal = ap + b * (ps[ij]);
+      } else {
+	pVal = p[ij];
+      }
 
-      float esiValue = esi(t[i + (nx * j)]);
+      float esiValue = esi(t[ij]);
       // (scale pressure Pa -> hPa)
       float qsValue = qs(esiValue, pVal * 0.01);
-      float rhValue = RH(q[i + (nx * j)], qsValue);
+      float rhValue = RH(q[ij], qsValue);
       // (scale pressure Pa -> hPa)
-      tCritValues[i + (nx * j)] = Tcrit(pVal * 0.01, rhValue);
+      tCritValues[ij] = Tcrit(pVal * 0.01, rhValue);
     }
   }
 
+#pragma omp parallel for
   for (int j = 0; j < ny; ++j) {
     for (int i = 0; i < nx; ++i) {
+      int ij = i + (nx * j);
       float pVal = 0;
       if (p == NULL) {
-       	pVal = ap + b * (ps[i + (nx * j)]);
+       	pVal = ap + b * (ps[ij]);
       } else {
-       	pVal = p[i + (nx * j)];
+       	pVal = p[ij];
       }
 
       // (scale pressure Pa -> hPa)
-      float zValue = ::z(t[i + (nx * j)], pVal * 0.01, ps[i + (nx * j)] * 0.01);
+      float zValue = ::z(t[ij], pVal * 0.01, ps[ij] * 0.01);
 
       // K -> deg. C
-      float tVal = t[i + (nx * j)] - 273.15;
+      float tVal = t[ij] - 273.15;
 
-      data[i + (nx * j)] = SchmidtAppleman(tCritValues[i + (nx * j)], tVal);
+      data[ij] = SchmidtAppleman(tCritValues[ij], tVal);
 
       // save this point/cell in the vertical sum-field as well
-      if(data[i + (nx * j)] != 0) {
-        sum[i + (nx * j)] = data[i + (nx * j)];
+      if(data[ij] != 0) {
+        sum[ij] = data[ij];
 
         // save maximum and minimum heights where contrails can occur
         // NOTE: Assumes layer 1 is TOA
-        if (contrailsTop[i + (nx * j)] == 0) {
-          contrailsTop[i + (nx * j)] = zValue*ONE_FEET; ///< convert to ft;
+        if (contrailsTop[ij] == 0) {
+          contrailsTop[ij] = zValue*ONE_FEET; ///< convert to ft;
           // make sure bottom value is initialized (in case there are contrails in only one level/height)
-          contrailsBottom[i + (nx * j)] = zValue*ONE_FEET; ///< convert to ft
+          contrailsBottom[ij] = zValue*ONE_FEET; ///< convert to ft
         } else {
-          contrailsBottom[i + (nx * j)] = zValue*ONE_FEET; ///< convert to ft
+          contrailsBottom[ij] = zValue*ONE_FEET; ///< convert to ft
         }
       }
 

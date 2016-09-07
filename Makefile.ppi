@@ -18,11 +18,11 @@ CC=/usr/bin/gcc
 #ARFLAGS=-cr
 
 # CXX-flags
-CXXFLAGS= #-O3
+CXXFLAGS= -O2 -fopenmp
 CXXLDFLAGS=
 #
 # C-flags
-CFLAGS= #-O3
+CFLAGS= -O2
 CLDFLAGS=
 
 # log4cxx

@@ -77,41 +77,48 @@ void executeDucting(unique_ptr<FileHandler>& input,
 	cout.imbue(locale(cout.getloc(), facet));
 
 	bool initializedOutputFile = false;
+	bool verbose = false;
 	Ducting ducting;
 
 	shared_ptr<vector<string> > variables = input->getVariables();
-	cout << "Available variables: " << endl;
-	for(string variable : *variables) {
-		cout << variable << endl;
+	if (verbose) {
+	  cout << "Available variables: " << endl;
+	  for(string variable : *variables) {
+	    cout << variable << endl;
+	  }
+	  cout << endl;
 	}
-	cout << endl;
 	shared_ptr<vector<string> > dimensions = input->getDimensions();
-	cout << "Available dimensions: " << endl;
-	for(string dimension : *dimensions) {
-		cout << dimension << endl;
+	if (verbose) {
+	  cout << "Available dimensions: " << endl;
+	  for(string dimension : *dimensions) {
+	    cout << dimension << endl;
+	  }
+	  cout << endl;
 	}
-	cout << endl;
 
 	shared_ptr<vector<double> > times = input->getTimes("specific_humidity_ml");
 	vector<pt::ptime> ptimes;
-	cout << "Available times:" << endl;
+	if (verbose) cout << "Available times:" << endl;
 	for(int time : *times) {
 		time_t tmp_time(time);
 		pt::ptime boost_time = pt::from_time_t(tmp_time);
 		ptimes.push_back(boost_time);
-		cout << boost_time << ": ";
+		if (verbose) cout << boost_time << ": ";
 	}
-	cout << endl << endl;
+	if (verbose) cout << endl << endl;
 
 	shared_ptr<vector<double> > levels = input->getLevels("specific_humidity_ml");
-	cout << "Available levels:" << endl;
-	for (double level : *levels) {
-		cout << level << ": ";
+	if (verbose) {
+	  cout << "Available levels:" << endl;
+	  for (double level : *levels) {
+	    cout << level << ": ";
+	  }
+	  cout << endl << endl;
 	}
-	cout << endl << endl;
 
 	cout << "nx: " << input->getNx("specific_humidity_ml") << endl
-			<< "ny: " << input->getNy("specific_humidity_ml") << endl << endl;
+	     << "ny: " << input->getNy("specific_humidity_ml") << endl << endl;
 
 	cout << "Reference time:" << endl;
 	pt::ptime refTime = input->getRefTime();
@@ -137,7 +144,7 @@ void executeDucting(unique_ptr<FileHandler>& input,
 		/// iterate levels
 		int level_offset=0;
 		for(double level : *levels) {
-			cout << "Processing level " << level << endl;
+		        if (verbose) cout << "Processing level " << level << endl;
 
 			/// read fields/data
 			boost::shared_array<float> t = input->readSpatialGriddedLevel("air_temperature_ml", time, level);
@@ -233,6 +240,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 	cout.imbue(locale(cout.getloc(), facet));
 
 	bool initializedOutputFile = false;
+	bool verbose = false;
 	Icing icing;
 
 	shared_ptr<vector<double> > times = input->getTimes("specific_humidity_ml");
@@ -266,7 +274,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 		/// iterate levels
 		int level_offset=0;
 		for(double level : *levels) {
-			cout << "Processing level " << level << endl;
+		        if (verbose) cout << "Processing level " << level << endl;
 
 			/// read fields/data
 			boost::shared_array<float> t = input->readSpatialGriddedLevel("air_temperature_ml", time, level);
@@ -344,6 +352,7 @@ void executeContrails(unique_ptr<FileHandler>& input,
 	cout.imbue(locale(cout.getloc(), facet));
 
 	bool initializedOutputFile = false;
+	bool verbose = false;
 	Contrails contrails;
 
 	shared_ptr<vector<double> > times = input->getTimes("specific_humidity_ml");
@@ -377,7 +386,7 @@ void executeContrails(unique_ptr<FileHandler>& input,
 		/// iterate levels
 		int level_offset=0;
 		for(double level : *levels) {
-			cout << "Processing level " << level << endl;
+		        if (verbose) cout << "Processing level " << level << endl;
 
 			/// read fields/data
 			boost::shared_array<float> t = input->readSpatialGriddedLevel("air_temperature_ml", time, level);
