@@ -153,10 +153,10 @@ binclean:
 	rm -f $(BINDIR)/ppalgs
 
 clean:
-	@make -fMakefile.workstation pretty
+	@make -fMakefile.ppi pretty
 	rm -f *.o
 
 veryclean:
-	@make -fMakefile.workstation pretty
-	@make -fMakefile.workstation binclean
-	@make -fMakefile.workstation clean
+	@make -fMakefile.ppi pretty
+	@make -fMakefile.ppi binclean
+	@make -fMakefile.ppi clean
