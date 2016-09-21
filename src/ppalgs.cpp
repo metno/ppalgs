@@ -64,7 +64,7 @@ void copySpatialGriddedLevel(unique_ptr<FileHandler>& input,
  * Variables used:
  * 18/theta_potensiell_temp - air_potential_temperature - use air_temperature_ml, and compute potential temperature
  * 9/q_spesifikk_fuktighet - specific_humidity - specific_humidity_ml
- * 8/p_lufttrykk - ps (air_pressure_at_sea_level) - air_pressure_at_sea_level
+ * 8/p_lufttrykk - ps (surface_air_pressure) - surface_air_pressure
  */
 void executeDucting(unique_ptr<FileHandler>& input,
 		unique_ptr<FileHandler>& output,
@@ -120,9 +120,8 @@ void executeDucting(unique_ptr<FileHandler>& input,
 	cout << "nx: " << input->getNx("specific_humidity_ml") << endl
 	     << "ny: " << input->getNy("specific_humidity_ml") << endl << endl;
 
-	cout << "Reference time:" << endl;
 	pt::ptime refTime = input->getRefTime();
-	cout << refTime << endl;
+	cout << "Reference time: " << refTime << endl;
 
 	//FIXME: check that the number of vertical levels matches in input and output, and
 	// that the horizontal dimensions match for all input and output 2D fields
@@ -135,10 +134,10 @@ void executeDucting(unique_ptr<FileHandler>& input,
 		cout << "Processing time " << ptimes[time_offset] << endl;
 
 		/// read ps
-		boost::shared_array<float> ps = input->readSpatialGriddedLevel("air_pressure_at_sea_level", time, 0.0);
+		boost::shared_array<float> ps = input->readSpatialGriddedLevel("surface_air_pressure", time, 0.0);
 
-		int nx = input->getNx("air_pressure_at_sea_level");
-		int ny = input->getNy("air_pressure_at_sea_level");
+		int nx = input->getNx("surface_air_pressure");
+		int ny = input->getNy("surface_air_pressure");
 		int size = nx*ny;
 
 		/// iterate levels
@@ -227,7 +226,7 @@ void executeDucting(unique_ptr<FileHandler>& input,
  * 18 - air_potential_temperature - use air_temperature_ml, and compute potential temperature
  * 13 - omega (lagrangian_tendency_of_air_pressure) - not needed, as vertical velocity w is available in AROME MetCoOp (as upward_air_velocity_ml)
  * 22 - cloud_liquid_water_content_of_atmosphere_layer - atmosphere_cloud_condensed_water_content_ml
- * 8 - ps (air_pressure_at_sea_level) - air_pressure_at_sea_level
+ * 8 - ps (surface_air_pressure) - surface_air_pressure
  */
 void executeIcing(unique_ptr<FileHandler>&  input,
 		unique_ptr<FileHandler>& output,
@@ -243,7 +242,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 	bool verbose = false;
 	Icing icing;
 
-	shared_ptr<vector<double> > times = input->getTimes("specific_humidity_ml");
+	shared_ptr<vector<double> > times = input->getTimes("air_temperature_ml");
 	vector<pt::ptime> ptimes;
 	for(int time : *times) {
 		time_t tmp_time(time);
@@ -251,7 +250,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 		ptimes.push_back(boost_time);
 	}
 
-	shared_ptr<vector<double> > levels = input->getLevels("specific_humidity_ml");
+	shared_ptr<vector<double> > levels = input->getLevels("air_temperature_ml");
 
 	pt::ptime refTime = input->getRefTime();
 
@@ -265,10 +264,10 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 		cout << "Processing time " << ptimes[time_offset] << endl;
 
 		/// read ps
-		boost::shared_array<float> ps = input->readSpatialGriddedLevel("air_pressure_at_sea_level", time, 0.0);
+		boost::shared_array<float> ps = input->readSpatialGriddedLevel("surface_air_pressure", time, 0.0);
 
-		int nx = input->getNx("air_pressure_at_sea_level");
-		int ny = input->getNy("air_pressure_at_sea_level");
+		int nx = input->getNx("surface_air_pressure");
+		int ny = input->getNy("surface_air_pressure");
 		int size = nx*ny;
 
 		/// iterate levels
@@ -339,7 +338,7 @@ void executeIcing(unique_ptr<FileHandler>&  input,
  * Variables used:
  * 18/theta_potensiell_temp - air_potential_temperature - use air_temperature_ml, and compute potential temperature
  * 9/q_spesifikk_fuktighet - specific_humidity - specific_humidity_ml
- * 8/p_lufttrykk - ps (air_pressure_at_sea_level) - air_pressure_at_sea_level
+ * 8/p_lufttrykk - ps (surface_air_pressure) - surface_air_pressure
  */
 void executeContrails(unique_ptr<FileHandler>& input,
 		unique_ptr<FileHandler>& output,
@@ -377,10 +376,10 @@ void executeContrails(unique_ptr<FileHandler>& input,
 		cout << "Processing time " << ptimes[time_offset] << endl;
 
 		/// read ps
-		boost::shared_array<float> ps = input->readSpatialGriddedLevel("air_pressure_at_sea_level", time, 0.0);
+		boost::shared_array<float> ps = input->readSpatialGriddedLevel("surface_air_pressure", time, 0.0);
 
-		int nx = input->getNx("air_pressure_at_sea_level");
-		int ny = input->getNy("air_pressure_at_sea_level");
+		int nx = input->getNx("surface_air_pressure");
+		int ny = input->getNy("surface_air_pressure");
 		int size = nx*ny;
 
 		/// iterate levels

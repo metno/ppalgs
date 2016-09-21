@@ -279,14 +279,14 @@ float* Icing::initW(int k, float boundarySouth, float dx, float dy, float af,
     for (int i = 1; i < nx - 1; ++i) {
       int ind = i + (nx * j);
 
-      float div = rhxy[ind] * (zrdx2 * (uu[i + 1 + (nx * j)] - uu[i - 1 + (nx
-          * j)]) + zrdy2 * (vv[i + (nx * (j + 1))] - vv[i + (nx * (j - 1))]));
+      float div = rhxy[ind] * (zrdx2 * (uu[ind + 1] - uu[ind - 1])
+	  + zrdy2 * (vv[ind + nx] - vv[ind - nx]));
 
       float w1 = r * t[ind] * (dlnp[ind] * sum[ind] + alfa[ind] * div)
           / dp[ind];
 
-      float w2 = rhx[ind] * zrdx2 * (z[i + 1 + (nx * j)] - z[i - 1 + (nx * j)])
-          + rhy[ind] * zrdy2 * (z[i + (nx * (j + 1))] - z[i + (nx * (j - 1))]);
+      float w2 = rhx[ind] * zrdx2 * (z[ind + 1] - z[ind - 1])
+          + rhy[ind] * zrdy2 * (z[ind + nx] - z[ind - nx]);
       w[ind] = (w1 + w2) / g;
       sum[ind] = sum[ind] + div;
     }
@@ -326,34 +326,34 @@ void Icing::calcIcingIndices2D(int nx, int ny, float ap, float b, float *data,
 #pragma omp parallel for
   for (int j = 0; j < ny; ++j) {
     for (int i = 0; i < nx; ++i) {
-      int ij = i + (nx * j);
+      int ind = i + (nx * j);
       float pVal = 0;
       if (p == NULL) {
-    	  pVal = ap + b * (ps[ij]);
+    	  pVal = ap + b * (ps[ind]);
       } else {
-    	  pVal = p[ij];
+    	  pVal = p[ind];
       }
       // (scale pressure Pa -> hPa)
-      float zValue = ::z(t[ij], pVal * 0.01, ps[ij] * 0.01);
+      float zValue = ::z(t[ind], pVal * 0.01, ps[ind] * 0.01);
       ///FIXME: double-check conversions!
-      int AValue = A(1000 * cw[ij], t[ij]); ///< convert kg/kg -> g/kg
+      int AValue = A(1000 * cw[ind], t[ind]); ///< convert kg/kg -> g/kg
 
-      data[ij] = B(AValue, w[ij] * 100); ///< convert m/s -> cm/s
+      data[ind] = B(AValue, w[ind] * 100); ///< convert m/s -> cm/s
 
       /// save highest icingindex and current height
-      if (data[ij] > icingindexMax[ij]) {
-        icingindexMax[ij] = data[ij];
-        icingindexMaxHeight[ij] = zValue*ONE_FEET; ///< convert to ft
+      if (data[ind] > icingindexMax[ind]) {
+        icingindexMax[ind] = data[ind];
+        icingindexMaxHeight[ind] = zValue*ONE_FEET; ///< convert to ft
       }
       /// save bottom and top layer with icingindex > 4
       /// NOTE: Assumes layer 1 is TOA
-      if (data[ij] > 4) {
-        if (icingindexTopGt4[ij] == 0) {
-          icingindexTopGt4[ij] = zValue*ONE_FEET; ///< convert to ft
+      if (data[ind] > 4) {
+        if (icingindexTopGt4[ind] == 0) {
+          icingindexTopGt4[ind] = zValue*ONE_FEET; ///< convert to ft
           // make sure bottom value is initialized (in case there are icing only in one level/height)
-          icingindexBottomGt4[ij] = zValue*ONE_FEET; ///< convert to ft
+          icingindexBottomGt4[ind] = zValue*ONE_FEET; ///< convert to ft
         } else {
-          icingindexBottomGt4[ij] = zValue*ONE_FEET; ///< convert to ft
+          icingindexBottomGt4[ind] = zValue*ONE_FEET; ///< convert to ft
         }
       }
     }
