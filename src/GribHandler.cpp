@@ -205,7 +205,7 @@ float GribHandler::readSingleValueLevel(std::string variableName, double _time, 
 			sb.setStartAndSize(zAxis, level_offset, 1);
 
 			// fetch the data
-			data = reader->getDataSlice(variableName, sb);
+			data = reader->getScaledDataSlice(variableName, sb);
 	}
 
 	return data->asFloat()[0];
@@ -260,7 +260,7 @@ boost::shared_array<float> GribHandler::readSpatialGriddedLevel(string variableN
 			}
 
 			// fetch the data
-			data = reader->getDataSlice(variableName, sb);
+			data = reader->getScaledDataSlice(variableName, sb);
 		}
 	}
 
