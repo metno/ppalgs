@@ -154,10 +154,10 @@ void Ducting::reset()
     currentElevatedDuctTop[i] = -numeric_limits<float>::max();
     dMdzMin[i] = numeric_limits<float>::max();
     surfaceDuctBottom[i] = numeric_limits<float>::max();
-	surfaceDuctTop[i] = -numeric_limits<float>::max();
-	elevatedDuctBottom[i] = numeric_limits<float>::max();
-	elevatedDuctTop[i] = -numeric_limits<float>::max();
-	noOfElevatedDucts[i] = 0.0f;
+    surfaceDuctTop[i] = -numeric_limits<float>::max();
+    elevatedDuctBottom[i] = numeric_limits<float>::max();
+    elevatedDuctTop[i] = -numeric_limits<float>::max();
+    noOfElevatedDucts[i] = 0.0f;
   }
 }
 
@@ -251,16 +251,16 @@ void Ducting::calcDuctingGrads2D(int nx, int ny, float ap, float b,
 #pragma omp parallel for
   for (int j = 0; j < ny; ++j) {
     for (int i = 0; i < nx; ++i) {
-      int ij = i + (nx * j);
+      int ind = i + (nx * j);
       float pVal = 0;
       if (p == NULL) {
-        pVal = ap + b * (ps[ij]);
+        pVal = ap + b * (ps[ind]);
       } else {
-        pVal = p[ij];
+        pVal = p[ind];
       }
 
       // (scale pressure Pa -> hPa)
-      data[ij] = dMdz(i, j, ps[ij] * 0.01, pVal * 0.01, t[ij], q[ij]);
+      data[ind] = dMdz(i, j, ps[ind] * 0.01, pVal * 0.01, t[ind], q[ind]);
     }
   }
 }
