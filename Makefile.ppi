@@ -18,12 +18,12 @@ CC=/usr/bin/gcc
 #ARFLAGS=-cr
 
 # CXX-flags
-CXXFLAGS= -O2 -fopenmp
-CXXLDFLAGS=
+CXXFLAGS= -O2 -g -fopenmp
+CXXLDFLAGS= -g -rdynamic
 #
 # C-flags
-CFLAGS= -O2
-CLDFLAGS=
+CFLAGS= -O2 -g
+CLDFLAGS= -g -rdynamic
 
 # log4cxx
 
