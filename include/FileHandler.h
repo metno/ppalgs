@@ -48,6 +48,7 @@ class FileHandler {
 
 	std::string getFilename() { return filename; }
 	FileType getFileType() { return type; }
+	std::string getHybridNumber() { return hybrid_number; }
 
 	/**
 	 * Initialize the file with correct attributes
@@ -125,6 +126,7 @@ class FileHandler {
 	protected:
 	FileType type;
 	std::string filename;
+	std::string hybrid_number;
 };
 
 #endif /*FILEHANDLER_*/

@@ -45,6 +45,7 @@ GribHandler::GribHandler(string _filename, string config_filename) {
 	coordSys = listCoordinateSystems(reader);
 
 	type = FileType::GRIB;
+	hybrid_number = "";
 }
 
 GribHandler::~GribHandler() { }
@@ -55,7 +56,7 @@ shared_ptr<vector<string> > GribHandler::getVariables() {
 	const vector<CDMVariable>& cdm_variables = cdm.getVariables();
 
 	for(CDMVariable variable : cdm_variables)
-		variables->push_back(variable. getName());
+		variables->push_back(variable.getName());
 
 	return variables;
 }

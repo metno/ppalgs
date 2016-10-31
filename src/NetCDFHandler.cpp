@@ -52,6 +52,7 @@ NetCDFHandler::NetCDFHandler(string _filename, NcFile::FileMode filemode) :
 	coordSys = listCoordinateSystems(reader);
 
 	type = FileType::NETCDF;
+	hybrid_number = "";
 }
 
 NetCDFHandler::~NetCDFHandler() { }
@@ -155,11 +156,13 @@ shared_ptr<vector<double> > NetCDFHandler::getLevels(string variableName) {
 
 	int dim = 0;
 	for(int i=0; i < dims; ++i) {
-		// NOTE: Assumes height/z dimension is named "hybrid0"!
-		if (var.getDim(i).getName().compare("hybrid0") == 0) {
-			dim = i;
-			break;
-		}
+	  // NOTE: Assumes height/z dimension is named "hybrid*"!
+	  string dimname = var.getDim(i).getName(); 
+	  if (dimname.compare(0,6,"hybrid") == 0) {
+	    dim = i;
+	    hybrid_number = dimname.substr(6);
+	    break;
+	  }
 	}
 
 	levels->resize(var.getDim(dim).getSize());

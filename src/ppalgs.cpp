@@ -149,8 +149,9 @@ void executeDucting(unique_ptr<FileHandler>& input,
 			boost::shared_array<float> t = input->readSpatialGriddedLevel("air_temperature_ml", time, level);
 			boost::shared_array<float> q = input->readSpatialGriddedLevel("specific_humidity_ml", time, level);
 
-			float ap = input->readSingleValueLevel("ap0", time, level);
-			float b = input->readSingleValueLevel("b0", time, level);
+			string hnum = input->getHybridNumber();
+			float ap = input->readSingleValueLevel("ap"+hnum, time, level);
+			float b = input->readSingleValueLevel("b"+hnum, time, level);
 
 			/// calculate ducting gradients and write gradients to file
 			vector<float> data = vector<float>(size);
@@ -280,8 +281,9 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 			boost::shared_array<float> cw = input->readSpatialGriddedLevel("atmosphere_cloud_condensed_water_content_ml", time, level);
 			boost::shared_array<float> w = input->readSpatialGriddedLevel("upward_air_velocity_ml", time, level);
 
-			float ap = input->readSingleValueLevel("ap0", time, level);
-			float b = input->readSingleValueLevel("b0", time, level);
+			string hnum = input->getHybridNumber();
+			float ap = input->readSingleValueLevel("ap"+hnum, time, level);
+			float b = input->readSingleValueLevel("b"+hnum, time, level);
 
 			/// calculate ducting gradients and write gradients to file
 			vector<float> data = vector<float>(size);
@@ -391,8 +393,9 @@ void executeContrails(unique_ptr<FileHandler>& input,
 			boost::shared_array<float> t = input->readSpatialGriddedLevel("air_temperature_ml", time, level);
 			boost::shared_array<float> q = input->readSpatialGriddedLevel("specific_humidity_ml", time, level);
 
-			float ap = input->readSingleValueLevel("ap0", time, level);
-			float b = input->readSingleValueLevel("b0", time, level);
+			string hnum = input->getHybridNumber();
+			float ap = input->readSingleValueLevel("ap"+hnum, time, level);
+			float b = input->readSingleValueLevel("b"+hnum, time, level);
 
 			/// calculate ducting gradients and write gradients to file
 			vector<float> data = vector<float>(size);
