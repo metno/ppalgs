@@ -212,12 +212,13 @@ float Tcrit(float pamb, float rhamb)
     float a12 = -C2*C1*ta0i*ta0i - C2*(a22 + fdp)*(gdp - tp0i) - atmp;
     // if a11 becomes >= 0, there is no max for deltaT in the plume
     if ( a11 > -eps1 ) {
-      cerr << "a11 too big: " << a11 << " Abort!" << endl;
+      //      cerr << "a11 too big: " << a11 << " Abort!" << endl;
+      cerr << "a11 too big: " << a11 << endl;
       cerr << "iter,a21,a12,a22,s1,s2=" << iter <<" "<< a21 <<" "<< a12 <<" "<< a22 <<" "<< s1 <<" "<< s2 << endl;
       cerr << "pamb: " << pamb << endl;
       cerr << "rhamb: " << rhamb << endl;
       cerr << "determinant: " << a11*a22 - a12*a21;
-      exit(1);
+      break;
     }
     // Solve equation system by gaussian elimination on the 2x2 Jacobian aij
     float qq = a21/a11;
