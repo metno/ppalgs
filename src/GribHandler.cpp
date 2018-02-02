@@ -23,6 +23,7 @@
 
 #include "GribHandler.h"
 #include <sstream>
+#include <exception>
 
 #include "fimex/CoordinateSystemSliceBuilder.h"
 #include "fimex/CDMFileReaderFactory.h"
@@ -34,6 +35,13 @@
 
 using namespace MetNoFimex;
 using namespace std;
+
+class NotFoundException: public exception {
+  virtual const char* what() const throw()
+  {
+    return "Variable not found";
+  }
+} not_found_exception;
 
 GribHandler::GribHandler(string _filename, string config_filename) {
 	filename = _filename;
@@ -207,6 +215,8 @@ float GribHandler::readSingleValueLevel(std::string variableName, double _time, 
 
 			// fetch the data
 			data = reader->getScaledDataSlice(variableName, sb);
+	} else {
+	  throw not_found_exception;
 	}
 
 	return data->asFloat()[0];
@@ -263,7 +273,8 @@ boost::shared_array<float> GribHandler::readSpatialGriddedLevel(string variableN
 			// fetch the data
 			data = reader->getScaledDataSlice(variableName, sb);
 		}
+	} else {
+	  throw not_found_exception;
 	}
-
 	return data->asFloat();
 }

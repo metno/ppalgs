@@ -278,7 +278,14 @@ void executeIcing(unique_ptr<FileHandler>&  input,
 
 			/// read fields/data
 			boost::shared_array<float> t = input->readSpatialGriddedLevel("air_temperature_ml", time, level);
-			boost::shared_array<float> cw = input->readSpatialGriddedLevel("atmosphere_cloud_condensed_water_content_ml", time, level);
+			boost::shared_array<float> cw;
+			try {
+			  if (verbose) cout << "Reading atmosphere_cloud_condensed_water_content_ml" << endl;
+			  cw = input->readSpatialGriddedLevel("atmosphere_cloud_condensed_water_content_ml", time, level);
+			} catch(...) {
+			  if (verbose) cout << "Reading mass_fraction_of_cloud_condensed_water_in_air_ml" << endl;
+			  cw = input->readSpatialGriddedLevel("mass_fraction_of_cloud_condensed_water_in_air_ml", time, level);
+			}
 			boost::shared_array<float> w = input->readSpatialGriddedLevel("upward_air_velocity_ml", time, level);
 
 			string hnum = input->getHybridNumber();

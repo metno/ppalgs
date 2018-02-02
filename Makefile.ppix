@@ -1,0 +1,170 @@
+# Makefile for ppalgs (was: ducting)
+
+LOCALDIR :=
+
+ifndef USRLOCAL
+  USRLOCAL := /usr/local
+endif
+
+# Platform suffix
+PLT=
+
+# Compilers etc
+CXX=/usr/bin/g++
+CC=/usr/bin/gcc
+
+#LD=/use/bin/gcc
+#AR=ar
+#ARFLAGS=-cr
+
+# CXX-flags
+CXXFLAGS= -O2 -g -fopenmp
+#####-DBOOST_DISABLE_ASSERTS
+CXXLDFLAGS= -g -rdynamic
+#
+# C-flags
+CFLAGS= -O2 -g
+CLDFLAGS= -g -rdynamic
+
+# log4cxx
+
+HASMILOGGER := $(shell test -f   $(LOCALDIR)/lib/libmiLogger.a && echo YES)
+
+ifeq ($(HASMILOGGER),YES)
+LOGGDEF=-DNOLOG4CXX
+LOGGLIBS=-L$(LOCALDIR)/lib -lmiLogger
+else
+#LOGGDEF=-DHAVE_LOG4CXX
+#LOGGINC=
+#LOGGLIBS=-L$(LOCALDIR)/lib -llog4cxx
+endif
+
+#netCDF includes
+NETCDFINCLUDE=-I/modules/xenial/NETCDF/4.4.1/include
+UDUNITSINCLUDE=-I/usr/include
+
+#netCDF lib
+NETCDFLIBDIR=-L/modules/xenial/NETCDF/4.4.1/lib
+NETCDFLIB=-lnetcdf_c++4
+
+MPI=-L/modules/xenial/OPENMPI/2.0.0/lib
+
+BINDIR=bin$(PLT)
+LIBDIR=lib$(PLT)
+INCDIR=.
+LOCALINC=$(LOCALDIR)/include
+FIMEXINC=-I/modules/xenial/user-apps/fimex/0.63.3/include -I/usr/include/libxml2
+
+VPATH = src test
+
+INCLUDE= -I./include -I$(INCDIR) $(FIMEXINC) $(CPPFLAG) $(NETCDFINCLUDE) $(UDUNITSINCLUDE)
+
+# LINKS = -L$(LOCALDIR)/$(LIBDIR) \
+#         -lmiLogger \
+#         -L$(LOCALDIR)/$(LIBDIR) \
+#         $(F2CLIB) -lm \
+#         $(UDUNITSLIBDIR) $(UDUNITSLIB) \
+#         $(NETCDFLIBDIR) $(NETCDFLIB) \
+#         $(MPI) \
+#         -llog4cpp \
+#         -lboost_thread -lboost_date_time -lboost_program_options \
+# 		-lproj \
+# 		-lmpi_cxx \
+# 		-lfimex \
+# 		$(shell pkg-config --libs libcurl) \
+#         $(shell pkg-config --libs libpqxx)
+
+LINKS = -L/modules/xenial/user-apps/fimex/0.63.3/lib -lfimex \
+ -Wl,-rpath -Wl,/opt/zlibnew/lib -Wl,-rpath -Wl,/modules/xenial/grib_api/1.16.0/lib -lfelt \
+ -L/usr/lib/x86_64-linux-gnu -lboost_date_time -lboost_filesystem  -lboost_iostreams -lboost_program_options  -lboost_regex \
+ -L/modules/xenial/grib_api/1.16.0/lib   -lnetcdf -L/modules/xenial/grib_api/1.16.0/lib -lgrib_api -lproj -ludunits2 -lpq -llog4cpp -lnsl -lm \
+ $(NETCDFLIBDIR) $(NETCDFLIB)
+
+LINKS_TEST = -L$(LOCALDIR)/$(LIBDIR) \
+        -lboost_unit_test_framework \
+        -lmiLogger
+
+OPTIONS=-fopenmp
+
+#----------------------------------------------------------------------------
+
+all: directories version $(BINDIR)/ppalgs
+test: all $(BINDIR)/test
+
+#----------------------------------------------------------------------------
+
+CXXOBJ= Ducting.o Icing.o Contrails.o NetCDFHandler.o GribHandler.o ppalgs.o
+CXXOBJ_TEST= Ducting.o Icing.o Contrails.o NetCDFHandler.o GribHandler.o ppalgs_test.o
+
+#----------------------------------------------------------------------------
+
+CXXSRC= Ducting.cpp Icing.cpp Contrails.cpp NetCDFHandler.cpp GribHandler.cpp ppalgs.cpp
+CXXSRC_TEST= ppalgs_test.cpp
+
+ALLSRC= $(CXXSRC)
+ALLOBJ= $(CXXOBJ)
+
+#----------------------------------------------------------------------------
+
+# From .cpp to .o
+%.o: %.cpp
+	$(CXX) -std=c++0x $(CXXFLAGS) -c $< $(INCLUDE) -g
+
+# From .c to .o
+%.o: %.c
+	$(CC) -c $(CXXFLAGS) $< $(INCLUDE) -g
+
+#---------------------------------------------------------------------------
+
+directories:
+	if [ ! -d $(BINDIR) ] ; then mkdir $(BINDIR) ; fi
+
+#----------------------------------------------------------------------------
+
+$(BINDIR)/test: $(CXXOBJ_TEST)
+	$(CXX) -std=c++0x -o $@ $(CXXFLAGS) $(CXXOBJ_TEST) $(LINKS) $(LINKS_TEST)
+	BOOST_TEST_LOG_LEVEL=test_suite $(BINDIR)/test
+
+#----------------------------------------------------------------------------
+
+$(BINDIR)/ppalgs: $(ALLOBJ) 
+	$(CXX) -std=c++0x -o $@ $(CXXFLAGS) $(OPTIONS) -g $(ALLOBJ) $(LINKS)
+
+#----------------------------------------------------------------------------
+
+VERSIONHEADER=ppalgsVersion.h
+version:
+	@if [ -s $(VERSIONHEADER) ]; then \
+	  olddate=`grep version_string $(VERSIONHEADER) | cut -f2 -d\"`; \
+	else \
+	  olddate="firsttime"; \
+	fi; \
+	today=`date +%Y-%m-%d`; \
+	if [ ! $$olddate = $$today ]; then \
+	  rm -f $(VERSIONHEADER); \
+	  echo '#ifndef _version_h_' > $(VERSIONHEADER); \
+	  echo '#define _version_h_' >> $(VERSIONHEADER); \
+	  echo 'const std::string version_string= "'$$today'";' >> $(VERSIONHEADER); \
+	  echo '#endif' >> $(VERSIONHEADER); \
+	  chmod 0664 $(VERSIONHEADER); \
+	  echo "UPDATED $(VERSIONHEADER) $$today"; \
+	else \
+	  echo "UNCHANGED $(VERSIONHEADER) $$olddate"; \
+	fi
+
+#----------------------------------------------------------------------------
+
+pretty:
+	find . \( -name 'core' -o -name '*~' \) -exec rm -f {} \;
+
+binclean:
+	rm -f $(BINDIR)/ppalgs
+
+clean:
+	@make -fMakefile.ppix pretty
+	rm -f *.o
+
+veryclean:
+	@make -fMakefile.ppix pretty
+	@make -fMakefile.ppix binclean
+	@make -fMakefile.ppix clean
