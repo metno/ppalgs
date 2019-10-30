@@ -33,7 +33,6 @@
 #include "fimex/Data.h"
 
 #include "fimex/CDMReaderWriter.h"
-#include "fimex/NetCDF_CDMReader.h"
 
 using namespace std;
 
@@ -229,9 +228,7 @@ bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, size_t size, v
 			}
 
 			// write the data
-			// FIXME: The first line below should work... but we get complaints about write protected nc-file
-			//boost::shared_ptr<CDMReaderWriter> writer = boost::dynamic_pointer_cast<CDMReaderWriter>(reader);
-			std::shared_ptr<CDMReaderWriter> writer = std::make_shared<NetCDF_CDMReader>(filename, true);
+			std::shared_ptr<CDMReaderWriter> writer = CDMFileReaderFactory::createReaderWriter("netcdf", filename);
 
 			DataPtr write_data = createData(CDMDataType::CDM_FLOAT, data.begin(), data.end());
 			writer->putDataSlice(variableName, sb, write_data);
