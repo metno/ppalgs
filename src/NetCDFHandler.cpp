@@ -187,15 +187,14 @@ bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, size_t size, v
 	// XXX: do some sanity checks (the variable must exist, the dimensions x,y,z, and time should exist, and there should be only one refTime)
 
 	// find an appropriate coordinate system for a variable
-	vector<boost::shared_ptr<const CoordinateSystem> >::iterator varSysIt =
-			find_if(coordSys.begin(), coordSys.end(), CompleteCoordinateSystemForComparator(variableName));
+	CoordinateSystem_cp_v::iterator varSysIt = find_if(coordSys.begin(), coordSys.end(), CompleteCoordinateSystemForComparator(variableName));
 
 	if (varSysIt != coordSys.end()) {
 		if ((*varSysIt)->isSimpleSpatialGridded()) {
-			CoordinateSystem::ConstAxisPtr xAxis = (*varSysIt)->getGeoXAxis(); // X or Lon
-			CoordinateSystem::ConstAxisPtr yAxis = (*varSysIt)->getGeoYAxis(); // Y or Lat
-			CoordinateSystem::ConstAxisPtr zAxis = (*varSysIt)->getGeoZAxis(); // Z or height (ml, pl, etc.)
-			CoordinateSystem::ConstAxisPtr tAxis = (*varSysIt)->getTimeAxis(); // time
+			CoordinateAxis_cp xAxis = (*varSysIt)->getGeoXAxis(); // X or Lon
+			CoordinateAxis_cp yAxis = (*varSysIt)->getGeoYAxis(); // Y or Lat
+			CoordinateAxis_cp zAxis = (*varSysIt)->getGeoZAxis(); // Z or height (ml, pl, etc.)
+			CoordinateAxis_cp tAxis = (*varSysIt)->getTimeAxis(); // time
 			CoordinateSystemSliceBuilder sb(cdm, *varSysIt);
 
 			// handling of time
@@ -204,7 +203,7 @@ bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, size_t size, v
 						sb.getTimeVariableSliceBuilder());
 
 				// find time offset
-				boost::shared_array<double> times_data = times->asDouble();
+				MetNoFimex::shared_array<double> times_data = times->asDouble();
 				for(int i=0; i < times->size(); ++i, time_offset++)
 					if(times_data[i] == _time) {
 						break;
@@ -221,7 +220,7 @@ bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, size_t size, v
 			// find level offset
 			if (_level != -1) {
 				DataPtr levels = reader->getData(zAxis->getName());
-				boost::shared_array<double> levels_data = levels->asDouble();
+				MetNoFimex::shared_array<double> levels_data = levels->asDouble();
 				for(int i=0; i < levels->size(); ++i, level_offset++)
 					if (isClose(levels_data[i], _level)) {
 						break;
@@ -232,7 +231,7 @@ bool NetCDFHandler::writeSpatialGriddedLevel(string variableName, size_t size, v
 			// write the data
 			// FIXME: The first line below should work... but we get complaints about write protected nc-file
 			//boost::shared_ptr<CDMReaderWriter> writer = boost::dynamic_pointer_cast<CDMReaderWriter>(reader);
-			boost::shared_ptr<CDMReaderWriter> writer = boost::shared_ptr<CDMReaderWriter>(new NetCDF_CDMReader(filename, true));
+			std::shared_ptr<CDMReaderWriter> writer = std::make_shared<NetCDF_CDMReader>(filename, true);
 
 			DataPtr write_data = createData(CDMDataType::CDM_FLOAT, data.begin(), data.end());
 			writer->putDataSlice(variableName, sb, write_data);

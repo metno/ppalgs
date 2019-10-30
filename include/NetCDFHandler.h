@@ -100,9 +100,9 @@ class NetCDFHandler : public FileHandler {
 
 	netCDF::NcFile::FileMode filemode;
 
-	boost::shared_ptr<MetNoFimex::CDMReader> reader;
+	MetNoFimex::CDMReader_p reader;
 	MetNoFimex::CDM cdm;
-	std::vector<boost::shared_ptr<const MetNoFimex::CoordinateSystem> > coordSys;
+	MetNoFimex::CoordinateSystem_cp_v coordSys;
 };
 
 #endif /*NETCDFHANDLER_*/

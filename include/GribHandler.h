@@ -109,9 +109,9 @@ class GribHandler : public FileHandler {
 	virtual boost::shared_array<float> readSpatialGriddedLevel(std::string variableName, double _time, double _level=-1);
 
 	private:
-	boost::shared_ptr<MetNoFimex::CDMReader> reader;
+	MetNoFimex::CDMReader_p reader;
 	MetNoFimex::CDM cdm;
-	std::vector<boost::shared_ptr<const MetNoFimex::CoordinateSystem> > coordSys;
+	MetNoFimex::CoordinateSystem_cp_v coordSys;
 };
 
 #endif /*GRIBHANDLER_*/
