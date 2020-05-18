@@ -166,7 +166,7 @@ float Ducting::dz(float z, int i, int j)
   return -z * 0.001 + zm[i + (nx * j)] * 0.001;
 }
 
-float Ducting::dMdz(int i, int j, float ps, float p, float t, float q)
+float Ducting::dMdz(int i, int j, float* data_m, float* data_z, float ps, float p, float t, float q)
 {
   int ind = i + (nx * j);
 
@@ -175,10 +175,12 @@ float Ducting::dMdz(int i, int j, float ps, float p, float t, float q)
 
   float piValue = exner(p);
   float zValue = ::z(t, p, ps);
+  data_z[ind] = zValue;
   float dzValue = dz(zValue, i, j);
 
   if (dzValue != 0) {
     float MValue = M(N(t, q, p), zValue);
+    data_m[ind] = MValue;
     float dMdz = (-MValue + Mm[ind]) / dzValue;
 
     /// save lowest dMdz
@@ -237,12 +239,14 @@ float Ducting::dMdz(int i, int j, float ps, float p, float t, float q)
     Mm[ind] = 0.;
     zm[ind] = 0.;
 
+    data_m[ind] = 0.;
+
     return 0.;
   }
 }
 
 void Ducting::calcDuctingGrads2D(int nx, int ny, float ap, float b,
-		float* data, float* ps, float* t, float* q, float* p)
+		float* data, float* data_m, float* data_z, float* ps, float* t, float* q, float* p)
 {
   if (!initialized()) {
     initialize(nx, ny);
@@ -260,7 +264,7 @@ void Ducting::calcDuctingGrads2D(int nx, int ny, float ap, float b,
       }
 
       // (scale pressure Pa -> hPa)
-      data[ind] = dMdz(i, j, ps[ind] * 0.01, pVal * 0.01, t[ind], q[ind]);
+      data[ind] = dMdz(i, j, data_m, data_z, ps[ind] * 0.01, pVal * 0.01, t[ind], q[ind]);
     }
   }
 }

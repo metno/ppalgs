@@ -130,13 +130,15 @@ private:
 	 * Calculate the ducting gradient for (i,j)
 	 * @param i Index in x-dimension
 	 * @param j Index in y-dimension
+	 * @param data_m M-values are written to this array
+     * @param data_z Heights in meters are written to this array
 	 * @param ps Pointer to surface pressure data (hPa)
 	 * @param p Pointer to pressure data (hPa)
 	 * @param th Pointer to potential temperature data
 	 * @param q Pointer to specific humidity data
 	 * @return dM/dz for (i,j)
 	 */
-	float dMdz(int i, int j, float ps, float p, float th, float q);
+	float dMdz(int i, int j, float* data_m, float* data_z, float ps, float p, float th, float q);
 	
 public:
 	/**
@@ -211,14 +213,16 @@ public:
 	 * @param ny height of 2D fields
 	 * @param ap hybrid coordinate
 	 * @param b hybrid coordinate
-	 * @param data Results are written to this array
+	 * @param data Ducting gradients dM/dz are written to this array
+	 * @param data_m M-values are written to this array
+	 * @param data_z Heights in meters are written to this array
 	 * @param ps Surface pressure
 	 * @param t Air temperature
 	 * @param q Specific humidity
 	 * @param p Pressure. (If not given it will be calculated from ps.)
 	 */
 	void calcDuctingGrads2D(int nx, int ny, float ap, float b,
-			float* data, float* ps, float* t, float* q, float* p=NULL);
+			float* data, float* data_m, float* data_z, float* ps, float* t, float* q, float* p=NULL);
 };
 
 inline float Ducting::exner(float p)

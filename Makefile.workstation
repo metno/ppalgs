@@ -1,6 +1,6 @@
-# Makefile for ppalgs (was: ducting)
+# Makefile for ppalgs
 
-LOCALDIR := /home/martinsa/local
+LOCALDIR := /home/martinls/local
 
 ifndef USRLOCAL
   USRLOCAL := /usr/local
@@ -46,6 +46,10 @@ UDUNITSINCLUDE=-I/usr/include
 NETCDFLIBDIR=-L/usr/lib
 NETCDFLIB=-lnetcdf_c++4
 
+#fimex
+FIMEXINCLUDE=-I$(LOCALDIR)/include/fimex-1.4
+FIMEXLIBDIR=-I$(LOCALDIR)/include/fimex-1.4
+
 BINDIR=bin$(PLT)
 LIBDIR=lib$(PLT)
 INCDIR=.
@@ -53,11 +57,9 @@ LOCALINC=$(LOCALDIR)/include
 
 VPATH = src test
 
-INCLUDE= -I./include -I$(INCDIR) -I$(LOCALINC) $(NETCDFINCLUDE) $(UDUNITSINCLUDE)
+INCLUDE= -I./include -I$(INCDIR) -I$(LOCALINC) $(FIMEXINCLUDE) $(NETCDFINCLUDE) $(UDUNITSINCLUDE)
 
 LINKS = -L$(LOCALDIR)/$(LIBDIR) \
-        -lmiLogger \
-        -L$(LOCALDIR)/$(LIBDIR) \
         $(F2CLIB) -lm \
         $(UDUNITSLIBDIR) $(UDUNITSLIB) \
         $(NETCDFLIBDIR) $(NETCDFLIB) \
@@ -65,13 +67,13 @@ LINKS = -L$(LOCALDIR)/$(LIBDIR) \
         -lboost_thread -lboost_date_time -lboost_program_options \
 		-lproj \
 		-lmpi_cxx \
-		-lfimex \
+		-lfimex-1.4 \
 		$(shell pkg-config --libs libcurl) \
         $(shell pkg-config --libs libpqxx)
 
 LINKS_TEST = -L$(LOCALDIR)/$(LIBDIR) \
-        -lboost_unit_test_framework \
-        -lmiLogger
+        -lboost_unit_test_framework
+#        -lmiLogger
 
 OPTIONS=-fopenmp
 

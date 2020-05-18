@@ -155,8 +155,10 @@ void executeDucting(unique_ptr<FileHandler>& input,
 
 			/// calculate ducting gradients and write gradients to file
 			vector<float> data = vector<float>(size);
+			vector<float> data_m = vector<float>(size);
+			vector<float> data_z = vector<float>(size);
 
-			ducting.calcDuctingGrads2D(nx, ny, ap, b, data.data(), ps.get(), t.get(), q.get());
+			ducting.calcDuctingGrads2D(nx, ny, ap, b, data.data(), data_m.data(), data_z.data(), ps.get(), t.get(), q.get());
 
 			// write current time and level to file
 			if (!initializedOutputFile) {
@@ -165,6 +167,8 @@ void executeDucting(unique_ptr<FileHandler>& input,
 			}
 
 			output->writeSpatialGriddedLevel("ducting_ml", size, data, time, level);
+			output->writeSpatialGriddedLevel("ducting_m_ml", size, data_m, time, level);
+			output->writeSpatialGriddedLevel("z_ml", size, data_z, time, level);
 
 			++level_offset;
 		}
